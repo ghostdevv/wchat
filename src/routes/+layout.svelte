@@ -1,12 +1,110 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
 	import 'ghostsui';
+	import IconGripVertical from '~icons/lucide/grip-vertical';
+	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
+	import favicon from '$lib/assets/favicon.svg';
+	import Sidebar from './Sidebar.svelte';
+	import type { Snippet } from 'svelte';
 
-	const { children } = $props();
+	interface Props {
+		children: Snippet;
+	}
+
+	const { children }: Props = $props();
+
+	let isDragging = $state(false);
+	let collapsed = $state(false);
+	let innerWidth = $state(0);
+
+	const panelMin = $derived(Math.ceil((200 / innerWidth) * 100));
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{@render children()}
+<svelte:window bind:innerWidth />
+
+<div class="wrapper">
+	<PaneGroup direction="horizontal">
+		<Pane
+			defaultSize={panelMin}
+			minSize={panelMin}
+			onCollapse={() => (collapsed = true)}
+			onExpand={() => (collapsed = false)}
+			collapsible
+		>
+			<Sidebar />
+		</Pane>
+
+		<PaneResizer class="resizer" onDraggingChange={(v) => (isDragging = v)}>
+			<div class="resizer-grip" class:active={isDragging} class:collapsed>
+				<IconGripVertical />
+			</div>
+		</PaneResizer>
+
+		<Pane minSize={33}>
+			<main>
+				{@render children()}
+			</main>
+		</Pane>
+	</PaneGroup>
+</div>
+
+<style>
+	.wrapper {
+		padding: 10px;
+		width: 100dvw;
+		height: 100dvh;
+	}
+
+	main {
+		width: 100%;
+		height: 100%;
+		overflow-y: auto;
+
+		border: 2px solid var(--background-secondary);
+		border-radius: 12px;
+		padding: 10px;
+	}
+
+	:global(.pane-reverse) {
+		flex-direction: column-reverse !important;
+	}
+
+	:global(.resizer) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		&:focus .resizer-grip {
+			background-color: var(--primary);
+		}
+	}
+
+	.resizer-grip {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		background-color: var(--background-tertiary);
+		border-radius: 4px;
+		z-index: 1000;
+
+		transition: background-color 0.2s ease-in-out;
+
+		padding: 6px 2px;
+		margin: 0px -4px;
+
+		&.collapsed {
+			margin-right: -11px;
+			margin-left: 0px;
+		}
+
+		&:hover,
+		&:active,
+		&.active {
+			background-color: var(--primary);
+		}
+	}
+</style>
