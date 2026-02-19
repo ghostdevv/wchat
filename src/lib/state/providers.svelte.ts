@@ -34,7 +34,34 @@ class Providers {
 		});
 	}
 
-	private findRaw(name: string) {
+	update(name: string, baseURL: string, apiKey?: string) {
+		const index = this.#providers.current.findIndex((p) => p.name === name);
+		if (index === -1) {
+			throw new Error(`Provider with name '${name}' not found`);
+		}
+
+		this.#providers.current[index] = {
+			type: 'openai-compatible',
+			name,
+			baseURL,
+			// oxlint-disable-next-line eslint(no-undefined)
+			apiKey: apiKey && apiKey.length > 0 ? apiKey : undefined,
+		};
+
+		this.#cache.delete(name);
+	}
+
+	remove(name: string) {
+		const index = this.#providers.current.findIndex((p) => p.name === name);
+		if (index === -1) {
+			throw new Error(`Provider with name '${name}' not found`);
+		}
+
+		this.#providers.current.splice(index, 1);
+		this.#cache.delete(name);
+	}
+
+	findRaw(name: string) {
 		return this.#providers.current.find((p) => p.name === name) ?? null;
 	}
 
