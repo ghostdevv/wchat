@@ -11,15 +11,12 @@
 	<div class="content">
 		<ul>
 			{#each chat.messages as message (message.id)}
-				<li>
-					<div>{message.role}</div>
-					<div>
-						{#each message.parts as part, partIndex (partIndex)}
-							{#if part.type === 'text'}
-								<div>{part.text}</div>
-							{/if}
-						{/each}
-					</div>
+				<li class:user={message.role === 'user'}>
+					{#each message.parts as part, partIndex (partIndex)}
+						{#if part.type === 'text'}
+							<p>{part.text}</p>
+						{/if}
+					{/each}
 				</li>
 			{/each}
 		</ul>
@@ -37,6 +34,26 @@
 
 		.content {
 			padding: 10px 12px;
+			overflow-y: auto;
+
+			ul {
+				list-style: none;
+
+				li {
+					&:not(:last-child) {
+						margin-bottom: 22px;
+					}
+
+					&.user {
+						background-color: var(--background-secondary);
+						border-radius: 12px;
+						font-style: italic;
+						padding: 6px 12px;
+						margin-left: auto;
+						width: 85%;
+					}
+				}
+			}
 		}
 	}
 </style>
