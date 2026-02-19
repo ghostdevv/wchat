@@ -5,7 +5,8 @@ export interface ProviderData {
 	type: 'openai-compatible';
 	name: string;
 	baseURL: string;
-	apiKey?: string;
+	apiKey: string | null;
+	models: Model[];
 }
 
 export interface Model {
@@ -21,7 +22,7 @@ class Providers {
 		return this.#providers.current.map((data) => this.findProvider(data));
 	}
 
-	add(name: string, baseURL: string, apiKey?: string) {
+	add(name: string, baseURL: string, models: Model[], apiKey: string | null) {
 		if (this.#providers.current.some((p) => p.name === name)) {
 			throw new Error(`Provider with name '${name}' already exists`);
 		}
@@ -31,10 +32,16 @@ class Providers {
 			name,
 			baseURL,
 			apiKey,
+			models,
 		});
 	}
 
-	update(name: string, baseURL: string, apiKey?: string) {
+	update(
+		name: string,
+		baseURL: string,
+		models: Model[],
+		apiKey: string | null,
+	) {
 		const index = this.#providers.current.findIndex((p) => p.name === name);
 		if (index === -1) {
 			throw new Error(`Provider with name '${name}' not found`);
@@ -44,8 +51,8 @@ class Providers {
 			type: 'openai-compatible',
 			name,
 			baseURL,
-			// oxlint-disable-next-line eslint(no-undefined)
-			apiKey: apiKey && apiKey.length > 0 ? apiKey : undefined,
+			apiKey: apiKey && apiKey.length > 0 ? apiKey : null,
+			models,
 		};
 
 		this.#cache.delete(name);
@@ -69,9 +76,10 @@ class Providers {
 		const data = typeof raw === 'string' ? this.findRaw(raw) : raw;
 		if (!data) throw new Error(`Provider with name '${raw}' not found`);
 
+		// @ts-expect-error todo
 		const provider = this.#cache.get(data.name) ?? createOpenAI(data);
 		this.#cache.set(data.name, provider);
-		return { name: data.name, provider };
+		return { name: data.name, models: data.models, provider };
 	}
 
 	async fetchModels(name: string) {

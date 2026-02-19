@@ -1,15 +1,20 @@
 <script lang="ts">
-	import { providers, type ProviderData } from '$lib/state/providers.svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
 	import IconTrash from '~icons/lucide/trash-2';
 	import IconPlus from '~icons/lucide/plus';
 	import IconEdit from '~icons/lucide/edit';
 	import { Dialog } from 'melt/builders';
+	import {
+		type ProviderData,
+		type Model,
+		providers,
+	} from '$lib/state/providers.svelte';
 
 	let editing = $state(false);
 	let name = $state('');
 	let baseURL = $state('');
-	let apiKey = $state('');
+	let apiKey = $state<string | null>(null);
+	let models = $state<Model[] | null>(null);
 
 	const dialog = new Dialog({
 		onOpenChange(open) {
@@ -17,7 +22,8 @@
 				editing = false;
 				name = '';
 				baseURL = '';
-				apiKey = '';
+				apiKey = null;
+				models = null;
 			}
 		},
 	});
@@ -27,7 +33,8 @@
 		editing = true;
 		name = provider.name;
 		baseURL = provider.baseURL;
-		apiKey = provider.apiKey ?? '';
+		apiKey = provider.apiKey;
+		models = provider.models;
 	}
 
 	function handleDelete(name: string) {
@@ -40,12 +47,18 @@
 		event.preventDefault();
 
 		if (editing) {
-			providers.update(name, baseURL, apiKey || undefined);
+			providers.update(name, baseURL, models ?? [], apiKey);
 		} else {
-			providers.add(name, baseURL, apiKey || undefined);
+			providers.add(name, baseURL, models ?? [], apiKey);
 		}
 
 		dialog.open = false;
+	}
+
+	async function fetchModels(provider: ProviderData, force = false) {
+		if (!force && provider.models) return provider.models;
+		provider.models = await providers.fetchModels(provider.name);
+		return provider.models;
 	}
 </script>
 
@@ -59,22 +72,23 @@
 		</button>
 	</div>
 
-	<ul class="provider-list">
-		{#each providers.current as { name, provider: _provider }}
-			{@const rawProvider = providers.findRaw(name)}
-			<li class="provider-item">
-				<div class="provider-info">
-					<span class="provider-name">{name}</span>
-					<span class="provider-url">{rawProvider?.baseURL}</span>
-				</div>
-				<div class="provider-actions">
+	<ul class="providers">
+		{#each providers.current as { name }}
+			{@const rawProvider = providers.findRaw(name)!}
+
+			<li class="provider">
+				<h4 class="name">{name}</h4>
+				<p class="url">{rawProvider.baseURL}</p>
+
+				<div class="actions">
 					<button
 						class="icon"
-						onclick={() => handleEdit(rawProvider!)}
+						onclick={() => handleEdit(rawProvider)}
 						title="Edit"
 					>
 						<IconEdit />
 					</button>
+
 					<button
 						class="icon danger"
 						onclick={() => handleDelete(name)}
@@ -83,13 +97,27 @@
 						<IconTrash />
 					</button>
 				</div>
+
+				<div class="models">
+					{#await fetchModels(rawProvider)}
+						<p>Loading...</p>
+					{:then models}
+						<ul>
+							{#each models as model}
+								<li>{model.name}</li>
+							{:else}
+								<li>No models found</li>
+							{/each}
+						</ul>
+					{:catch error}
+						<p>Error: {error.message}</p>
+					{/await}
+				</div>
 			</li>
+		{:else}
+			<li class="empty">No providers configured. Click + to add one.</li>
 		{/each}
 	</ul>
-
-	{#if providers.current.length === 0}
-		<p class="empty">No providers configured. Click + to add one.</p>
-	{/if}
 </section>
 
 <div {...dialog.overlay}></div>
@@ -151,62 +179,68 @@
 		justify-content: space-between;
 	}
 
-	.provider-list {
+	.providers {
 		list-style: none;
-		padding: 0;
-		margin: 16px 0 0 0;
-	}
 
-	.provider-item {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 12px;
-		border: 2px solid var(--background-secondary);
-		border-radius: 8px;
-		margin-bottom: 8px;
-	}
+		.provider {
+			display: grid;
+			grid-template-columns: 1fr max-content;
+			grid-template-rows: repeat(3, max-content);
+			grid-template-areas: 'name actions' 'url actions' 'models models';
+			align-items: center;
 
-	.provider-info {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
+			padding: 12px;
+			border: 2px solid var(--background-secondary);
+			border-radius: 8px;
+			margin-bottom: 8px;
 
-	.provider-name {
-		font-weight: 500;
-	}
+			.name {
+				font-weight: 500;
+				margin: 0px;
+				grid-area: name;
+			}
 
-	.provider-url {
-		font-size: 0.85em;
-		color: var(--text-secondary);
-	}
+			.url {
+				font-size: 0.85rem;
+				color: var(--text-secondary);
+				margin: 0px;
+				grid-area: url;
+			}
 
-	.provider-actions {
-		display: flex;
-		gap: 8px;
+			.actions {
+				display: flex;
+				grid-area: actions;
+				align-items: center;
+				margin: 0px;
+				gap: 8px;
+			}
+
+			.models {
+				grid-area: models;
+				border-top: 2px solid var(--background-tertiary);
+				padding-top: 6px;
+				margin-top: 12px;
+			}
+		}
 	}
 
 	.icon {
 		padding: 8px;
-		border: none;
-		background: transparent;
-		color: var(--text-secondary);
-		cursor: pointer;
-		border-radius: 6px;
-		transition:
-			background-color 0.2s,
-			color 0.2s;
-	}
 
-	.icon:hover {
-		background: var(--background-tertiary);
-		color: var(--text);
-	}
+		&:hover,
+		&.danger:hover {
+			background-color: var(--background-tertiary);
+		}
 
-	.icon.danger:hover {
-		background: rgba(220, 38, 38, 0.1);
-		color: #dc2626;
+		&:hover,
+		&:focus {
+			color: var(--text);
+		}
+
+		&.danger:hover,
+		&.danger:focus {
+			color: var(--red);
+		}
 	}
 
 	.empty {

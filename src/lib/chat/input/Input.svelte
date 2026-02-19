@@ -6,6 +6,7 @@
 	import IconCheck from '~icons/lucide/check';
 	import { Select } from 'melt/builders';
 	import Editor from './Editor.svelte';
+	import { untrack } from 'svelte';
 
 	interface Props {
 		chat: Chat;
@@ -18,8 +19,31 @@
 		model: Model;
 	}
 
+	const groupedOptions = $derived(
+		providers.current.map((provider): [name: string, options: Option[]] => [
+			provider.name,
+			provider.models.map(
+				(model): Option => ({
+					name: provider.name,
+					model,
+				}),
+			),
+		]),
+	);
+
+	function findInitialValue() {
+		if (!chat.providerName) return undefined;
+
+		const g = groupedOptions.find(([name]) => name === chat.providerName);
+		if (!g) return undefined;
+
+		const option = g[1].find((option) => option.model.id === chat.modelId);
+		return option;
+	}
+
 	const select = new Select<Option>({
 		sameWidth: false,
+		value: untrack(findInitialValue),
 		onValueChange(value) {
 			chat.modelId = value?.model.id ?? null;
 			chat.providerName = value?.name ?? null;
@@ -56,29 +80,21 @@
 			</button>
 
 			<div {...select.content}>
-				{#each providers.current as { name }}
+				{#each groupedOptions as [name, options]}
 					<h4>{name}</h4>
 
-					{#await providers.fetchModels(name)}
-						<p>Loading...</p>
-					{:then models}
-						{#each models as model}
-							{@const option: Option = { name, model }}
+					{#each options as option}
+						<div {...select.getOption(option)}>
+							<span>{option.model.name}</span>
 
-							<div {...select.getOption(option)}>
-								<span>{model.name}</span>
-
-								{#if select.isSelected(option)}
-									<IconCheck
-										color="var(--primary)"
-										font-size="0.9rem"
-									/>
-								{/if}
-							</div>
-						{/each}
-					{:catch error}
-						<p>{error}</p>
-					{/await}
+							{#if select.isSelected(option)}
+								<IconCheck
+									color="var(--primary)"
+									font-size="0.9rem"
+								/>
+							{/if}
+						</div>
+					{/each}
 				{/each}
 			</div>
 		</div>
