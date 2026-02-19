@@ -3,7 +3,7 @@
 	import { editorTheme, highlightTheme } from './theme';
 	import { markdown } from '@codemirror/lang-markdown';
 	import { codeLanguages } from './languages';
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import {
 		defaultKeymap,
 		history,
@@ -32,19 +32,17 @@
 		value?: string;
 		embedded?: boolean;
 		onChange?: (value: string) => unknown;
+		onSubmit?: () => void;
 	}
 
-	let { value = $bindable(''), onChange }: Props = $props();
-
-	let root: HTMLDivElement | null = null;
-
+	let { value = $bindable(''), onChange, onSubmit }: Props = $props();
 	const lineWrappingCompartment = new Compartment();
 
-	onMount(() => {
+	function editor(root: HTMLDivElement) {
 		const editor = new EditorView({
 			parent: root!,
 			state: EditorState.create({
-				doc: value,
+				doc: untrack(() => value),
 				extensions: [
 					editorTheme,
 					history(),
@@ -62,6 +60,14 @@
 						onChange?.(value);
 					}),
 					keymap.of([
+						{
+							key: 'Mod-Enter',
+							preventDefault: true,
+							run() {
+								onSubmit?.();
+								return true;
+							},
+						},
 						...defaultKeymap,
 						...searchKeymap,
 						...historyKeymap,
@@ -72,13 +78,25 @@
 			}),
 		});
 
+		$effect(() => {
+			if (value !== editor.state.doc.toString()) {
+				editor.dispatch({
+					changes: {
+						from: 0,
+						to: editor.state.doc.length,
+						insert: value,
+					},
+				});
+			}
+		});
+
 		return () => {
 			editor.destroy();
 		};
-	});
+	}
 </script>
 
-<div class="root" bind:this={root}></div>
+<div class="root" {@attach editor}></div>
 
 <style>
 	.root {

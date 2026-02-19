@@ -1,30 +1,59 @@
 <script lang="ts">
+	import { providers, type Model } from '$lib/state/providers.svelte';
 	import IconChevronDown from '~icons/lucide/chevron-down';
 	import IconArrowUp from '~icons/lucide/arrow-up';
 	import IconCheck from '~icons/lucide/check';
 	import { Select } from 'melt/builders';
 	import Editor from './Editor.svelte';
 
-	const options = [
-		'llama-3.1-8b-instruct',
-		'gemma-3-27b-instruct',
-		'glm-4.5-air',
-	];
+	interface Props {
+		onSubmit?: (message: string) => void;
+		providerName: string | null;
+		modelId: string | null;
+	}
 
-	type Option = string;
+	let {
+		onSubmit,
+		providerName = $bindable(),
+		modelId = $bindable(),
+	}: Props = $props();
 
-	const select = new Select<Option>({ sameWidth: false });
+	interface Option {
+		name: string;
+		model: Model;
+	}
+
+	const select = new Select<Option>({
+		sameWidth: false,
+		onValueChange(value) {
+			modelId = value?.model.id ?? null;
+			providerName = value?.name ?? null;
+		},
+	});
+
+	let input = $state('');
+
+	function submit() {
+		onSubmit?.(input);
+		input = '';
+	}
 </script>
 
 <div class="input">
-	<Editor />
+	<Editor bind:value={input} onSubmit={submit} />
 
 	<div class="controls">
 		<div class="select">
 			<label class="sr-only" {...select.label}>Model</label>
 
 			<button {...select.trigger} class="outline">
-				<span>{select.value ?? 'Select a model'}</span>
+				<span>
+					{#if select.value}
+						{select.value.name} - {select.value.model.name}
+					{:else}
+						Select a model
+					{/if}
+				</span>
 
 				<div class="chevron">
 					<IconChevronDown width="16px" height="16px" />
@@ -32,22 +61,34 @@
 			</button>
 
 			<div {...select.content}>
-				{#each options as option}
-					<div {...select.getOption(option)}>
-						<span>{option}</span>
+				{#each providers.current as { name }}
+					<h4>{name}</h4>
 
-						{#if select.isSelected(option)}
-							<IconCheck
-								color="var(--primary)"
-								font-size="0.9rem"
-							/>
-						{/if}
-					</div>
+					{#await providers.fetchModels(name)}
+						<p>Loading...</p>
+					{:then models}
+						{#each models as model}
+							{@const option: Option = { name, model }}
+
+							<div {...select.getOption(option)}>
+								<span>{model.name}</span>
+
+								{#if select.isSelected(option)}
+									<IconCheck
+										color="var(--primary)"
+										font-size="0.9rem"
+									/>
+								{/if}
+							</div>
+						{/each}
+					{:catch error}
+						<p>{error}</p>
+					{/await}
 				{/each}
 			</div>
 		</div>
 
-		<button class="outline">
+		<button class="outline" onclick={submit}>
 			<IconArrowUp />
 		</button>
 	</div>
