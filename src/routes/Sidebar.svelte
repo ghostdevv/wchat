@@ -1,4 +1,5 @@
 <script lang="ts">
+	import IconMessageCirclePlus from '~icons/lucide/message-circle-plus';
 	import IconSettings from '~icons/lucide/settings';
 </script>
 
@@ -6,6 +7,11 @@
 	<div></div>
 
 	<hr />
+
+	<a href="/chat">
+		<IconMessageCirclePlus />
+		New Chat
+	</a>
 
 	<a href="/settings">
 		<IconSettings />
