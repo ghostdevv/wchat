@@ -5,6 +5,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Sidebar from './Sidebar.svelte';
 	import type { Snippet } from 'svelte';
+	import { page } from '$app/state';
 
 	interface Props {
 		children: Snippet;
@@ -17,6 +18,7 @@
 	let innerWidth = $state(0);
 
 	const panelMin = $derived(Math.ceil((200 / innerWidth) * 100));
+	const isChatPage = $derived(page.url.pathname === '/');
 </script>
 
 <svelte:head>
@@ -44,7 +46,7 @@
 		</PaneResizer>
 
 		<Pane minSize={33}>
-			<main>
+			<main class:chat={isChatPage}>
 				{@render children()}
 			</main>
 		</Pane>
@@ -65,6 +67,14 @@
 
 		border: 2px solid var(--background-secondary);
 		border-radius: 12px;
+
+		:global(> *:first-child) {
+			margin-top: 0px;
+		}
+
+		&:not(&.chat) {
+			padding: 6px 8px;
+		}
 	}
 
 	:global(.pane-reverse) {
