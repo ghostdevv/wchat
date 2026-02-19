@@ -1,22 +1,17 @@
 <script lang="ts">
 	import { providers, type Model } from '$lib/state/providers.svelte';
 	import IconChevronDown from '~icons/lucide/chevron-down';
+	import type { Chat } from '$lib/state/chats.svelte';
 	import IconArrowUp from '~icons/lucide/arrow-up';
 	import IconCheck from '~icons/lucide/check';
 	import { Select } from 'melt/builders';
 	import Editor from './Editor.svelte';
 
 	interface Props {
-		onSubmit?: (message: string) => void;
-		providerName: string | null;
-		modelId: string | null;
+		chat: Chat;
 	}
 
-	let {
-		onSubmit,
-		providerName = $bindable(),
-		modelId = $bindable(),
-	}: Props = $props();
+	const { chat }: Props = $props();
 
 	interface Option {
 		name: string;
@@ -26,15 +21,15 @@
 	const select = new Select<Option>({
 		sameWidth: false,
 		onValueChange(value) {
-			modelId = value?.model.id ?? null;
-			providerName = value?.name ?? null;
+			chat.modelId = value?.model.id ?? null;
+			chat.providerName = value?.name ?? null;
 		},
 	});
 
 	let input = $state('');
 
 	function submit() {
-		onSubmit?.(input);
+		chat.send(input);
 		input = '';
 	}
 </script>

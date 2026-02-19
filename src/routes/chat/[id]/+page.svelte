@@ -1,39 +1,10 @@
 <script lang="ts">
-	import { streamText, convertToModelMessages } from 'ai';
-	import { providers } from '$lib/state/providers.svelte';
 	import Input from '$lib/chat/input/Input.svelte';
-	import { Chat } from '@ai-sdk/svelte';
+	import { chats } from '$lib/state/chats.svelte';
 
 	const { params } = $props();
 
-	let providerName = $state<string | null>(null);
-	let modelId = $state<string | null>(null);
-
-	const chat = new Chat({
-		get id() {
-			return params.id;
-		},
-		transport: {
-			async sendMessages({ messages, abortSignal }) {
-				if (!providerName || !modelId) {
-					throw new Error('Provider or model ID not set');
-				}
-
-				const { provider } = providers.findProvider(providerName);
-
-				const stream = streamText({
-					model: provider.chat(modelId),
-					messages: await convertToModelMessages(messages),
-					abortSignal,
-				});
-
-				return stream.toUIMessageStream();
-			},
-			async reconnectToStream() {
-				throw new Error('todo');
-			},
-		},
-	});
+	const chat = $derived(chats.get(params.id));
 </script>
 
 <div class="chat">
@@ -54,15 +25,7 @@
 		</ul>
 	</div>
 
-	<Input
-		bind:modelId
-		bind:providerName
-		onSubmit={(message) => {
-			chat.sendMessage({
-				text: message,
-			});
-		}}
-	/>
+	<Input {chat} />
 </div>
 
 <style>
