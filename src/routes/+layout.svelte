@@ -65,7 +65,6 @@
 
 		border: 2px solid var(--background-secondary);
 		border-radius: 12px;
-		padding: 10px;
 	}
 
 	:global(.pane-reverse) {
