@@ -2,6 +2,8 @@
 	import 'ghostsui';
 	import IconGripVertical from '~icons/lucide/grip-vertical';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
+	import { JazzSvelteProvider } from 'jazz-tools/svelte';
+	import { AccountSchema, db } from '$lib/state/db.svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import Sidebar from './Sidebar.svelte';
 	import type { Snippet } from 'svelte';
@@ -47,7 +49,9 @@
 
 		<Pane minSize={33}>
 			<main class:chat={isChatPage}>
-				{@render children()}
+				<JazzSvelteProvider {AccountSchema} sync={db.syncConfig}>
+					{@render children()}
+				</JazzSvelteProvider>
 			</main>
 		</Pane>
 	</PaneGroup>

@@ -1,101 +1,67 @@
 import { createOpenAI, type OpenAIProvider } from '@ai-sdk/openai';
-import { PersistedState } from 'runed';
-
-export interface ProviderData {
-	type: 'openai-compatible';
-	name: string;
-	baseURL: string;
-	apiKey: string | null;
-	models: Model[];
-}
+import { AccountCoState, CoState } from 'jazz-tools/svelte';
+import {
+	type Provider as ProviderData,
+	ProviderSchema,
+	AccountSchema,
+} from './db.svelte';
 
 export interface Model {
 	id: string;
 	name: string;
 }
 
-class Providers {
-	#providers = new PersistedState<ProviderData[]>('wchat::providers', []);
-	#cache = new Map<string, OpenAIProvider>();
+export class Provider {
+	#state: CoState<typeof ProviderSchema>;
+	public readonly current: ProviderData | null;
 
-	get current() {
-		return this.#providers.current.map((data) => this.findProvider(data));
+	get ready() {
+		return this.#state.current.$isLoaded;
 	}
 
-	add(name: string, baseURL: string, models: Model[], apiKey: string | null) {
-		if (this.#providers.current.some((p) => p.name === name)) {
-			throw new Error(`Provider with name '${name}' already exists`);
+	constructor(public readonly id: string) {
+		this.#state = new CoState(ProviderSchema, id);
+		this.current = $derived(
+			this.#state.current.$isLoaded ? this.#state.current : null,
+		);
+	}
+
+	update(name?: string, baseURL?: string, apiKey?: string | null) {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('provider is not loaded');
 		}
 
-		this.#providers.current.push({
-			type: 'openai-compatible',
-			name,
-			baseURL,
-			apiKey,
-			models,
+		if (name) {
+			this.#state.current.$jazz.set('name', name);
+		}
+
+		if (baseURL) {
+			this.#state.current.$jazz.set('baseURL', baseURL);
+		}
+
+		if (typeof apiKey !== 'undefined') {
+			this.#state.current.$jazz.set('apiKey', apiKey);
+		}
+	}
+
+	#ai: OpenAIProvider | null = null;
+
+	chatModel(id: string) {
+		this.#ai ??= createOpenAI({
+			baseURL: this.current?.baseURL,
+			// oxlint-disable-next-line eslint(no-undefined)
+			apiKey: this.current?.apiKey ?? undefined,
 		});
+
+		return this.#ai.chat(id);
 	}
 
-	update(
-		name: string,
-		baseURL: string,
-		models: Model[],
-		apiKey: string | null,
-	) {
-		const index = this.#providers.current.findIndex((p) => p.name === name);
-		if (index === -1) {
-			throw new Error(`Provider with name '${name}' not found`);
-		}
-
-		this.#providers.current[index] = {
-			type: 'openai-compatible',
-			name,
-			baseURL,
-			apiKey: apiKey && apiKey.length > 0 ? apiKey : null,
-			models,
-		};
-
-		this.#cache.delete(name);
-	}
-
-	remove(name: string) {
-		const index = this.#providers.current.findIndex((p) => p.name === name);
-		if (index === -1) {
-			throw new Error(`Provider with name '${name}' not found`);
-		}
-
-		this.#providers.current.splice(index, 1);
-		this.#cache.delete(name);
-	}
-
-	findRaw(name: string) {
-		return this.#providers.current.find((p) => p.name === name) ?? null;
-	}
-
-	findProvider(raw: string | ProviderData) {
-		const data = typeof raw === 'string' ? this.findRaw(raw) : raw;
-		if (!data) throw new Error(`Provider with name '${raw}' not found`);
-
-		// @ts-expect-error todo
-		const provider = this.#cache.get(data.name) ?? createOpenAI(data);
-		this.#cache.set(data.name, provider);
-		return { name: data.name, models: data.models, provider };
-	}
-
-	async fetchModels(name: string) {
-		const provider = this.findRaw(name);
-
-		if (!provider) {
-			throw new Error(`Provider with name '${name}' not found`);
-		}
-
-		const url = new URL(provider.baseURL);
+	static async fetchModels(baseURL: string, apiKey?: string | null) {
+		const url = new URL(baseURL);
 		url.pathname += '/models';
 
 		const headers = new Headers();
-		if (provider.apiKey) {
-			headers.set('Authorization', `Bearer ${provider.apiKey}`);
-		}
+		if (apiKey) headers.set('Authorization', `Bearer ${apiKey}`);
 
 		const result = await fetch(url, { headers });
 		const json: { data: Model[] } = await result.json();
@@ -104,4 +70,64 @@ class Providers {
 	}
 }
 
-export const providers = new Providers();
+export class Providers {
+	#providers = new AccountCoState(AccountSchema, {
+		resolve: { root: { providers: { $each: true } } },
+	});
+
+	#cache = new Map<string, Provider>();
+
+	get ready() {
+		return this.#providers.current.$isLoaded;
+	}
+
+	public readonly current = $derived(
+		this.raw.map((data) => {
+			const current = this.#cache.get(data.$jazz.id);
+			if (current) return current;
+
+			const provider = new Provider(data.$jazz.id);
+			this.#cache.set(data.$jazz.id, provider);
+			return provider;
+		}),
+	);
+
+	private get raw() {
+		return this.#providers.current.$isLoaded
+			? this.#providers.current.root.providers
+			: [];
+	}
+
+	async create(name: string, baseURL: string, apiKey: string | null) {
+		if (!this.#providers.current.$isLoaded) {
+			throw new Error('providers are not ready');
+		}
+
+		const models = await Provider.fetchModels(baseURL, apiKey).catch(
+			(error): Model[] => {
+				console.error('Failed to fetch models:', error);
+				return [];
+			},
+		);
+
+		this.#providers.current.root.providers.$jazz.push({
+			type: 'openai',
+			name,
+			baseURL,
+			apiKey,
+			models,
+		});
+	}
+
+	delete(id: string) {
+		if (!this.#providers.current.$isLoaded) {
+			throw new Error('providers are not ready');
+		}
+
+		this.#providers.current.root.providers.$jazz.remove(
+			(p) => p.$jazz.id === id,
+		);
+
+		this.#cache.delete(id);
+	}
+}

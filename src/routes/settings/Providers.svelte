@@ -1,20 +1,21 @@
 <script lang="ts">
+	import { Provider, Providers } from '$lib/state/providers.svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
 	import IconTrash from '~icons/lucide/trash-2';
 	import IconPlus from '~icons/lucide/plus';
 	import IconEdit from '~icons/lucide/edit';
 	import { Dialog } from 'melt/builders';
-	import {
-		type ProviderData,
-		type Model,
-		providers,
-	} from '$lib/state/providers.svelte';
 
-	let editing = $state(false);
+	const providers = new Providers();
+
+	let editing = $state<Provider | false>(false);
+	let saving = $state(false);
+
 	let name = $state('');
 	let baseURL = $state('');
 	let apiKey = $state<string | null>(null);
-	let models = $state<Model[] | null>(null);
+
+	const disabled = $derived(!providers.ready || saving);
 
 	const dialog = new Dialog({
 		onOpenChange(open) {
@@ -23,42 +24,36 @@
 				name = '';
 				baseURL = '';
 				apiKey = null;
-				models = null;
 			}
 		},
 	});
 
-	function handleEdit(provider: ProviderData) {
+	function handleEdit(provider: Provider) {
 		dialog.open = true;
-		editing = true;
-		name = provider.name;
-		baseURL = provider.baseURL;
-		apiKey = provider.apiKey;
-		models = provider.models;
+		editing = provider;
+		name = provider.current?.name ?? '';
+		baseURL = provider.current?.baseURL ?? '';
+		apiKey = provider.current?.apiKey ?? null;
 	}
 
-	function handleDelete(name: string) {
+	function handleDelete(id: string) {
 		if (confirm(`Are you sure you want to delete "${name}"?`)) {
-			providers.remove(name);
+			providers.delete(id);
 		}
 	}
 
-	function handleSubmit(event: SubmitEvent) {
+	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+		saving = true;
 
 		if (editing) {
-			providers.update(name, baseURL, models ?? [], apiKey);
+			editing.update(name, baseURL, apiKey);
 		} else {
-			providers.add(name, baseURL, models ?? [], apiKey);
+			await providers.create(name, baseURL, apiKey);
 		}
 
 		dialog.open = false;
-	}
-
-	async function fetchModels(provider: ProviderData, force = false) {
-		if (!force && provider.models) return provider.models;
-		provider.models = await providers.fetchModels(provider.name);
-		return provider.models;
+		saving = false;
 	}
 </script>
 
@@ -71,45 +66,39 @@
 	</div>
 
 	<ul class="providers">
-		{#each providers.current as { name }}
-			{@const rawProvider = providers.findRaw(name)!}
-
+		{#each providers.current as provider (provider.id)}
 			<li class="provider">
-				<h4 class="name">{name}</h4>
-				<p class="url">{rawProvider.baseURL}</p>
+				<h4 class="name">{provider.current?.name}</h4>
+				<p class="url">{provider.current?.baseURL}</p>
 
 				<div class="actions">
 					<button
 						class="icon"
-						onclick={() => handleEdit(rawProvider)}
+						onclick={() => handleEdit(provider)}
 						title="Edit"
+						disabled={!provider.ready || disabled}
 					>
 						<IconEdit />
 					</button>
 
 					<button
 						class="icon danger"
-						onclick={() => handleDelete(name)}
+						onclick={() => handleDelete(provider.id)}
 						title="Delete"
+						disabled={!provider.ready || disabled}
 					>
 						<IconTrash />
 					</button>
 				</div>
 
 				<div class="models">
-					{#await fetchModels(rawProvider)}
-						<p>Loading...</p>
-					{:then models}
-						<ul>
-							{#each models as model}
-								<li>{model.name}</li>
-							{:else}
-								<li>No models found</li>
-							{/each}
-						</ul>
-					{:catch error}
-						<p>Error: {error.message}</p>
-					{/await}
+					<ul>
+						{#each provider.current?.models as model}
+							<li>{model.name}</li>
+						{:else}
+							<li>No models found</li>
+						{/each}
+					</ul>
 				</div>
 			</li>
 		{:else}
@@ -131,6 +120,7 @@
 				placeholder="llama.cpp"
 				bind:value={name}
 				required
+				{disabled}
 			/>
 		</label>
 
@@ -141,6 +131,7 @@
 				placeholder="https://example.com/v1"
 				bind:value={baseURL}
 				required
+				{disabled}
 			/>
 		</label>
 
@@ -148,6 +139,7 @@
 			API Key
 			<PasswordInput
 				bind:value={apiKey}
+				{disabled}
 				placeholder={editing
 					? 'Leave empty to keep existing'
 					: 'Optional'}
@@ -157,13 +149,14 @@
 		<div class="actions">
 			<button
 				type="button"
-				class="secondary"
+				class="outline"
 				onclick={() => (dialog.open = false)}
+				{disabled}
 			>
 				Cancel
 			</button>
 
-			<button type="submit">
+			<button type="submit" {disabled}>
 				{editing ? 'Save' : 'Add'}
 			</button>
 		</div>

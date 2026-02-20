@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { Providers } from '$lib/state/providers.svelte';
 	import Input from '$lib/chat/input/Input.svelte';
 	import { chats } from '$lib/state/chats.svelte';
 
 	const { params } = $props();
 
-	const chat = $derived(chats.get(params.id));
+	const providers = new Providers();
+	const chat = $derived(chats.get(params.id, providers));
 </script>
 
 <div class="chat">
@@ -22,7 +24,7 @@
 		</ul>
 	</div>
 
-	<Input {chat} />
+	<Input {chat} {providers} />
 </div>
 
 <style>

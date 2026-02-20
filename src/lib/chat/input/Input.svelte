@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { providers, type Model } from '$lib/state/providers.svelte';
+	import { Providers, type Model } from '$lib/state/providers.svelte';
 	import IconChevronDown from '~icons/lucide/chevron-down';
 	import type { Chat } from '$lib/state/chats.svelte';
 	import IconArrowUp from '~icons/lucide/arrow-up';
@@ -9,35 +9,42 @@
 	import { untrack } from 'svelte';
 
 	interface Props {
+		providers: Providers;
 		chat: Chat;
 	}
 
-	const { chat }: Props = $props();
+	const { chat, providers }: Props = $props();
 
 	interface Option {
-		name: string;
+		providerId: string;
+		providerName: string;
 		model: Model;
 	}
 
 	const groupedOptions = $derived(
-		providers.current.map((provider): [name: string, options: Option[]] => [
-			provider.name,
-			provider.models.map(
-				(model): Option => ({
-					name: provider.name,
-					model,
-				}),
-			),
-		]),
+		providers.current.map(
+			// prettier-ignore
+			(provider): [id: string, name: string, options: Option[] | null] => [
+				provider.id,
+				provider.current!.name,
+				provider.current?.models.map(
+					(model): Option => ({
+						providerId: provider.id,
+						providerName: provider.current!.name,
+						model,
+					}),
+				) ?? null,
+			],
+		),
 	);
 
 	function findInitialValue() {
-		if (!chat.providerName) return undefined;
+		if (!chat.providerId) return undefined;
 
-		const g = groupedOptions.find(([name]) => name === chat.providerName);
+		const g = groupedOptions.find(([id]) => id === chat.providerId);
 		if (!g) return undefined;
 
-		const option = g[1].find((option) => option.model.id === chat.modelId);
+		const option = g[2]?.find((option) => option.model.id === chat.modelId);
 		return option;
 	}
 
@@ -46,7 +53,7 @@
 		value: untrack(findInitialValue),
 		onValueChange(value) {
 			chat.modelId = value?.model.id ?? null;
-			chat.providerName = value?.name ?? null;
+			chat.providerId = value?.providerId ?? null;
 		},
 	});
 
@@ -68,7 +75,7 @@
 			<button {...select.trigger} class="outline">
 				<span>
 					{#if select.value}
-						{select.value.name} - {select.value.model.name}
+						{select.value.providerName} - {select.value.model.name}
 					{:else}
 						Select a model
 					{/if}
@@ -80,7 +87,7 @@
 			</button>
 
 			<div {...select.content}>
-				{#each groupedOptions as [name, options]}
+				{#each groupedOptions as [, name, options]}
 					<h4>{name}</h4>
 
 					{#each options as option}

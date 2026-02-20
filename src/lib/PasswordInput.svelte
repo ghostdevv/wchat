@@ -39,6 +39,7 @@
 	.toggle-password {
 		width: 100%;
 		position: relative;
+		margin-top: 6px;
 
 		.toggle {
 			position: absolute;
