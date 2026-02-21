@@ -7,30 +7,56 @@
 </script>
 
 <script lang="ts">
-	import type { Model } from '$lib/state/providers.svelte';
+	import { Providers, type Model } from '$lib/state/providers.svelte';
 	import IconChevronDown from '~icons/lucide/chevron-down';
 	import IconCheck from '~icons/lucide/check';
 	import { Select } from 'melt/builders';
 
 	interface Props {
-		options: Option[];
-		selected?: Option;
-		disabled?: boolean;
+		disabled: boolean;
+		modelId: string | null;
+		providerId: string | null;
 	}
 
-	let { options, selected = $bindable(), disabled = false }: Props = $props();
+	let {
+		disabled,
+		modelId = $bindable(),
+		providerId = $bindable(),
+	}: Props = $props();
+
+	const providers = new Providers();
+
+	const options = $derived(
+		providers.current.flatMap((provider) =>
+			provider.current!.models.map(
+				(model): Option => ({
+					providerId: provider.id,
+					providerName: provider.current!.name,
+					model,
+				}),
+			),
+		),
+	);
+
+	const groups = $derived(
+		Object.groupBy(options, (option) => option.providerId),
+	);
+
+	const selected = $derived(
+		options.find(
+			(option) =>
+				option.providerId === providerId && option.model.id === modelId,
+		),
+	);
 
 	const select = new Select<Option>({
 		sameWidth: false,
 		value: () => selected,
 		onValueChange(value) {
-			selected = value;
+			modelId = value?.model.id ?? null;
+			providerId = value?.providerId ?? null;
 		},
 	});
-
-	const groups = $derived(
-		Object.groupBy(options, (option) => option.providerId),
-	);
 </script>
 
 <div class="select">
