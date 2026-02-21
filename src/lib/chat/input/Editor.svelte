@@ -36,7 +36,6 @@
 	}
 
 	let { value = $bindable(''), onChange, onSubmit }: Props = $props();
-	const lineWrappingCompartment = new Compartment();
 
 	function editor(root: HTMLDivElement) {
 		const editor = new EditorView({
@@ -53,7 +52,7 @@
 					markdown({ codeLanguages }),
 					highlightActiveLineGutter(),
 					highlightSelectionMatches(),
-					lineWrappingCompartment.of([]),
+					EditorView.lineWrapping,
 					syntaxHighlighting(highlightTheme),
 					EditorView.updateListener.of((newValue) => {
 						value = newValue.state.doc.toString();
