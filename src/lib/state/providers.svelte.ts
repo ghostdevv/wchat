@@ -11,6 +11,19 @@ export interface Model {
 	name: string;
 }
 
+async function fetchModels(baseURL: string, apiKey?: string | null) {
+	const url = new URL(baseURL);
+	url.pathname += '/models';
+
+	const headers = new Headers();
+	if (apiKey) headers.set('Authorization', `Bearer ${apiKey}`);
+
+	const result = await fetch(url, { headers });
+	const json: { data: Model[] } = await result.json();
+
+	return json.data;
+}
+
 export class Provider {
 	#state: CoState<typeof ProviderSchema>;
 	public readonly current: ProviderData | null;
@@ -54,7 +67,7 @@ export class Provider {
 		this.refreshingModels = true;
 
 		try {
-			const models = await Provider.fetchModels(
+			const models = await fetchModels(
 				this.#state.current.baseURL,
 				this.#state.current.apiKey,
 			);
@@ -77,19 +90,6 @@ export class Provider {
 		});
 
 		return this.#ai.chat(id);
-	}
-
-	static async fetchModels(baseURL: string, apiKey?: string | null) {
-		const url = new URL(baseURL);
-		url.pathname += '/models';
-
-		const headers = new Headers();
-		if (apiKey) headers.set('Authorization', `Bearer ${apiKey}`);
-
-		const result = await fetch(url, { headers });
-		const json: { data: Model[] } = await result.json();
-
-		return json.data;
 	}
 }
 
@@ -126,7 +126,7 @@ export class Providers {
 			throw new Error('providers are not ready');
 		}
 
-		const models = await Provider.fetchModels(baseURL, apiKey).catch(
+		const models = await fetchModels(baseURL, apiKey).catch(
 			(error): Model[] => {
 				console.error('Failed to fetch models:', error);
 				return [];
