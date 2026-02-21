@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Provider, Providers } from '$lib/state/providers.svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
+	import IconRefresh from '~icons/lucide/refresh-cw';
 	import IconTrash from '~icons/lucide/trash-2';
 	import IconPlus from '~icons/lucide/plus';
 	import IconEdit from '~icons/lucide/edit';
@@ -67,6 +68,9 @@
 
 	<ul class="providers">
 		{#each providers.current as provider (provider.id)}
+			{@const providerDisabled =
+				!provider.ready || provider.refreshingModels || disabled}
+
 			<li class="provider">
 				<h4 class="name">{provider.current?.name}</h4>
 				<p class="url">{provider.current?.baseURL}</p>
@@ -76,7 +80,7 @@
 						class="icon"
 						onclick={() => handleEdit(provider)}
 						title="Edit"
-						disabled={!provider.ready || disabled}
+						disabled={providerDisabled}
 					>
 						<IconEdit />
 					</button>
@@ -85,15 +89,32 @@
 						class="icon danger"
 						onclick={() => handleDelete(provider.id)}
 						title="Delete"
-						disabled={!provider.ready || disabled}
+						disabled={providerDisabled}
 					>
 						<IconTrash />
 					</button>
 				</div>
 
 				<div class="models">
+					<div class="title">
+						<h5>
+							Models <sup class="amount">
+								{provider.current?.models.length ?? 0}
+							</sup>
+						</h5>
+
+						<button
+							class="icon"
+							onclick={() => provider.refreshModels()}
+							title="Refresh Models"
+							disabled={providerDisabled}
+						>
+							<IconRefresh font-size="0.85rem" />
+						</button>
+					</div>
+
 					<ul>
-						{#each provider.current?.models as model}
+						{#each provider.current?.models ?? [] as model}
 							<li>{model.name}</li>
 						{:else}
 							<li>No models found</li>
@@ -211,6 +232,12 @@
 				border-top: 2px solid var(--background-tertiary);
 				padding-top: 6px;
 				margin-top: 12px;
+
+				.title .amount {
+					font-size: 0.85rem;
+					color: var(--text-grey);
+					vertical-align: middle;
+				}
 			}
 		}
 	}

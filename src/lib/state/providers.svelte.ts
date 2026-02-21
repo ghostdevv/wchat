@@ -44,6 +44,29 @@ export class Provider {
 		}
 	}
 
+	public refreshingModels = $state(false);
+
+	async refreshModels() {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('provider is not loaded');
+		}
+
+		this.refreshingModels = true;
+
+		try {
+			const models = await Provider.fetchModels(
+				this.#state.current.baseURL,
+				this.#state.current.apiKey,
+			);
+
+			this.#state.current.$jazz.set('models', models);
+		} catch (error) {
+			console.error(error);
+		}
+
+		this.refreshingModels = false;
+	}
+
 	#ai: OpenAIProvider | null = null;
 
 	chatModel(id: string) {
