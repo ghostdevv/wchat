@@ -48,35 +48,35 @@ export const AccountSchema = co
 		}
 	});
 
-class DB {
-	#syncEnabled = new PersistedState('wchat::sync-enabled', false);
+class Sync {
+	#enabled = new PersistedState('wchat::sync-enabled', false);
 
-	get syncEnabled() {
-		return this.#syncEnabled.current;
+	get enabled() {
+		return this.#enabled.current;
 	}
 
-	set syncEnabled(value: boolean) {
-		this.#syncEnabled.current = value;
+	set enabled(value: boolean) {
+		this.#enabled.current = value;
 	}
 
-	#syncPeer = new PersistedState<`wss://${string}` | null>(
+	#peer = new PersistedState<`wss://${string}` | null>(
 		'wchat::sync-peer',
 		null,
 	);
 
-	get syncPeer() {
-		return this.#syncPeer.current;
+	get peer() {
+		return this.#peer.current;
 	}
 
-	set syncPeer(value: `wss://${string}` | null) {
-		this.#syncPeer.current = value;
+	set peer(value: `wss://${string}` | null) {
+		this.#peer.current = value;
 	}
 
-	public readonly syncConfig = $derived<SyncConfig>(
-		this.syncEnabled && this.syncPeer
-			? { peer: this.syncPeer, when: 'signedUp' }
+	public readonly config = $derived<SyncConfig>(
+		this.enabled && this.peer
+			? { peer: this.peer, when: 'signedUp' }
 			: { when: 'never' },
 	);
 }
 
-export const db = new DB();
+export const sync = new Sync();

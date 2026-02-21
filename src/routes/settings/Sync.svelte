@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { usePassphraseAuth } from 'jazz-tools/svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
-	import { db } from '$lib/state/db.svelte';
+	import { sync } from '$lib/state/db.svelte';
 	import { wordlist } from './wordlist';
 
 	const auth = usePassphraseAuth({ wordlist });
@@ -23,7 +23,7 @@
 			throw new Error('Invalid peer URL');
 		}
 
-		db.syncPeer = peer as `wss://${string}`;
+		sync.peer = peer as `wss://${string}`;
 
 		try {
 			if (passphrase == auth.passphrase && auth.state === 'anonymous') {
@@ -51,11 +51,11 @@
 			type="checkbox"
 			role="switch"
 			{disabled}
-			bind:checked={db.syncEnabled}
+			bind:checked={sync.enabled}
 		/>
 	</div>
 
-	{#if db.syncEnabled}
+	{#if sync.enabled}
 		<div class="state">
 			<div class={['indicator', authState]}></div>
 			<p>{authState}</p>
@@ -69,7 +69,7 @@
 					type="url"
 					name="peer"
 					placeholder="wss://example.com"
-					value={db.syncPeer}
+					value={sync.peer}
 					required
 					{disabled}
 				/>

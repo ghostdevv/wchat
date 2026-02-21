@@ -1,7 +1,7 @@
 <script lang="ts">
 	import 'ghostsui';
 	import IconGripVertical from '~icons/lucide/grip-vertical';
-	import { AccountSchema, db } from '$lib/state/db.svelte';
+	import { AccountSchema, sync } from '$lib/state/db.svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import { JazzSvelteProvider } from 'jazz-tools/svelte';
 	import favicon from '$lib/assets/favicon.svg';
@@ -30,7 +30,7 @@
 <svelte:window bind:innerWidth />
 
 <div class="wrapper">
-	<JazzSvelteProvider {AccountSchema} sync={db.syncConfig}>
+	<JazzSvelteProvider {AccountSchema} sync={sync.config}>
 		<PaneGroup direction="horizontal">
 			<Pane
 				defaultSize={panelMin}
