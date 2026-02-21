@@ -1,10 +1,24 @@
 <script lang="ts">
 	import IconMessageCirclePlus from '~icons/lucide/message-circle-plus';
+	import { AccountSchema } from '$lib/state/db.svelte';
+	import { AccountCoState } from 'jazz-tools/svelte';
 	import IconSettings from '~icons/lucide/settings';
+
+	const account = new AccountCoState(AccountSchema, {
+		resolve: { root: { chats: { $each: true } } },
+	});
 </script>
 
 <nav class="sidebar">
-	<div></div>
+	<div class="chats">
+		{#if account.current.$isLoaded}
+			{#each account.current.root.chats as chat (chat.$jazz.id)}
+				<a href="/chat/{chat.$jazz.id}" title={chat.$jazz.id}>
+					{chat.$jazz.id}
+				</a>
+			{/each}
+		{/if}
+	</div>
 
 	<hr />
 
@@ -31,6 +45,22 @@
 
 		background-color: var(--background-secondary);
 		border-radius: 12px;
+
+		.chats {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+
+			height: 100%;
+			overflow-y: auto;
+
+			a {
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				overflow: hidden;
+				display: block;
+			}
+		}
 
 		a {
 			display: flex;

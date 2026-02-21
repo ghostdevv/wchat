@@ -1,78 +1,61 @@
-<script lang="ts">
-	import { Providers, type Model } from '$lib/state/providers.svelte';
-	import IconChevronDown from '~icons/lucide/chevron-down';
-	import type { Chat } from '$lib/state/chats.svelte';
-	import IconArrowUp from '~icons/lucide/arrow-up';
-	import IconCheck from '~icons/lucide/check';
-	import { Select } from 'melt/builders';
-	import Editor from './Editor.svelte';
-	import { untrack } from 'svelte';
-
-	interface Props {
-		providers: Providers;
-		chat: Chat;
-	}
-
-	const { chat, providers }: Props = $props();
-
-	interface Option {
+<script lang="ts" module>
+	export interface Option {
 		providerId: string;
 		providerName: string;
 		model: Model;
 	}
+</script>
 
-	const groupedOptions = $derived(
-		providers.current.map(
-			// prettier-ignore
-			(provider): [id: string, name: string, options: Option[] | null] => [
-				provider.id,
-				provider.current!.name,
-				provider.current?.models.map(
-					(model): Option => ({
-						providerId: provider.id,
-						providerName: provider.current!.name,
-						model,
-					}),
-				) ?? null,
-			],
-		),
-	);
+<script lang="ts">
+	import type { Model } from '$lib/state/providers.svelte';
+	import IconChevronDown from '~icons/lucide/chevron-down';
+	import IconArrowUp from '~icons/lucide/arrow-up';
+	import IconCheck from '~icons/lucide/check';
+	import { Select } from 'melt/builders';
+	import Editor from './Editor.svelte';
 
-	function findInitialValue() {
-		if (!chat.providerId) return undefined;
-
-		const g = groupedOptions.find(([id]) => id === chat.providerId);
-		if (!g) return undefined;
-
-		const option = g[2]?.find((option) => option.model.id === chat.modelId);
-		return option;
+	interface Props {
+		options: Option[];
+		selected?: Option;
+		onSubmit?: (input: string) => Promise<boolean>;
 	}
+
+	let { options, onSubmit, selected = $bindable() }: Props = $props();
 
 	const select = new Select<Option>({
 		sameWidth: false,
-		value: untrack(findInitialValue),
+		value: () => selected,
 		onValueChange(value) {
-			chat.modelId = value?.model.id ?? null;
-			chat.providerId = value?.providerId ?? null;
+			selected = value;
 		},
 	});
 
+	let disabled = $state(false);
 	let input = $state('');
 
-	function submit() {
-		chat.send(input);
-		input = '';
+	async function submit() {
+		disabled = true;
+		const success = await onSubmit?.(input);
+		disabled = false;
+
+		if (success) {
+			input = '';
+		}
 	}
+
+	const groups = $derived(
+		Object.groupBy(options, (option) => option.providerId),
+	);
 </script>
 
 <div class="input">
-	<Editor bind:value={input} onSubmit={submit} />
+	<Editor bind:value={input} onSubmit={submit} {disabled} />
 
 	<div class="controls">
 		<div class="select">
 			<label class="sr-only" {...select.label}>Model</label>
 
-			<button {...select.trigger} class="outline">
+			<button {...select.trigger} {disabled} class="outline">
 				<span>
 					{#if select.value}
 						{select.value.providerName} - {select.value.model.name}
@@ -87,26 +70,30 @@
 			</button>
 
 			<div {...select.content}>
-				{#each groupedOptions as [, name, options]}
-					<h4>{name}</h4>
+				{#each Object.values(groups) as options}
+					{#if options?.length}
+						<h4>{options[0].providerName}</h4>
 
-					{#each options as option}
-						<div {...select.getOption(option)}>
-							<span>{option.model.name}</span>
+						{#each options as option}
+							<div {...select.getOption(option)}>
+								<span>{option.model.name}</span>
 
-							{#if select.isSelected(option)}
-								<IconCheck
-									color="var(--primary)"
-									font-size="0.9rem"
-								/>
-							{/if}
-						</div>
-					{/each}
+								{#if select.isSelected(option)}
+									<IconCheck
+										color="var(--primary)"
+										font-size="0.9rem"
+									/>
+								{/if}
+							</div>
+						{/each}
+					{:else}
+						<p>No models available</p>
+					{/if}
 				{/each}
 			</div>
 		</div>
 
-		<button class="outline" onclick={submit}>
+		<button class="outline" onclick={submit} {disabled}>
 			<IconArrowUp />
 		</button>
 	</div>

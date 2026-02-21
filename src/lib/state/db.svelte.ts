@@ -16,9 +16,23 @@ export const ProviderSchema = co.map({
 
 export type Provider = co.output<typeof ProviderSchema>;
 
-export const AccountRootSchema = co.map({
-	providers: co.list(ProviderSchema),
+export const ChatSchema = co.map({
+	providerId: z.string().min(1).nullable(),
+	modelId: z.string().min(1).nullable(),
 });
+
+export type ChatData = co.output<typeof ChatSchema>;
+
+export const AccountRootSchema = co
+	.map({
+		providers: co.list(ProviderSchema),
+		chats: co.list(ChatSchema),
+	})
+	.withMigration((root) => {
+		if (!root.$jazz.has('chats')) {
+			root.$jazz.set('chats', []);
+		}
+	});
 
 export const AccountSchema = co
 	.account({
@@ -29,6 +43,7 @@ export const AccountSchema = co
 		if (!account.$jazz.has('root')) {
 			account.$jazz.set('root', {
 				providers: [],
+				chats: [],
 			});
 		}
 	});

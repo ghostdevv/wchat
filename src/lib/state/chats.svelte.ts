@@ -1,64 +1,85 @@
 import type { Providers } from './providers.svelte';
-import { Chat as SdkChat } from '@ai-sdk/svelte';
-import { PersistedState } from 'runed';
-import { untrack } from 'svelte';
+import { CoState } from 'jazz-tools/svelte';
+import { ChatSchema } from './db.svelte';
 import {
 	convertToModelMessages,
-	type UIDataTypes,
+	type ChatStatus,
+	type ChatState,
 	type UIMessage,
-	type UITools,
+	AbstractChat,
 	streamText,
 } from 'ai';
 
-type Message = UIMessage<unknown, UIDataTypes, UITools>;
+class State<M extends UIMessage> implements ChatState<M> {
+	messages: M[];
+	status = $state<ChatStatus>('ready');
+	error = $state<Error | undefined>();
 
-interface ChatState {
-	providerId: string | null;
-	modelId: string | null;
-	messages: Message[];
-}
-
-export class Chat {
-	#state: PersistedState<ChatState>;
-	#sdk: SdkChat;
-
-	get messages(): Message[] {
-		return this.#state.current.messages;
+	constructor(messages: M[] = []) {
+		this.messages = $state(messages);
 	}
 
-	set providerId(value: string | null) {
-		this.#state.current.providerId = value;
+	setMessages = (messages: M[]) => {
+		this.messages = messages;
+	};
+
+	pushMessage = (message: M) => {
+		this.messages.push(message);
+	};
+
+	popMessage = () => {
+		this.messages.pop();
+	};
+
+	replaceMessage = (index: number, message: M) => {
+		this.messages[index] = message;
+	};
+
+	snapshot = <T>(thing: T) => $state.snapshot(thing) as T;
+}
+
+export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
+	#state: CoState<typeof ChatSchema>;
+
+	set providerId(id: string | null) {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('chat is not loaded');
+		}
+
+		this.#state.current.$jazz.set('providerId', id);
 	}
 
 	get providerId(): string | null {
-		return this.#state.current.providerId;
+		return this.#state.current.$isLoaded
+			? this.#state.current.providerId
+			: null;
 	}
 
-	set modelId(value: string | null) {
-		this.#state.current.modelId = value;
+	set modelId(id: string | null) {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('chat is not loaded');
+		}
+
+		this.#state.current.$jazz.set('modelId', id);
 	}
 
 	get modelId(): string | null {
-		return this.#state.current.modelId;
+		return this.#state.current.$isLoaded
+			? this.#state.current.modelId
+			: null;
 	}
 
 	constructor(
 		public readonly id: string,
 		public readonly providers: Providers,
 	) {
-		this.#state = new PersistedState<ChatState>(`wchat::chat::${id}`, {
-			providerId: null,
-			modelId: null,
-			messages: [],
-		});
-
-		this.#sdk = new SdkChat({
+		super({
 			id,
-			messages: untrack(() => this.#state.current.messages),
+			state: new State<M>(),
 			transport: {
 				sendMessages: async ({ messages, abortSignal }) => {
-					this.#state.current.messages = messages;
-					const { providerId, modelId } = this.#state.current;
+					const providerId = this.providerId;
+					const modelId = this.modelId;
 
 					if (!providerId || !modelId) {
 						throw new Error('Provider or model ID not set');
@@ -84,33 +105,8 @@ export class Chat {
 					throw new Error('todo');
 				},
 			},
-			onFinish: ({ messages }) => {
-				this.#state.current.messages = messages;
-			},
 		});
-	}
 
-	async send(text: string) {
-		await this.#sdk.sendMessage({ text });
+		this.#state = new CoState(ChatSchema, id);
 	}
 }
-
-class Chats {
-	// #chatIds = new PersistedState<string[]>('wchat::chats', []);
-	#cache = new Map<string, Chat>();
-
-	get(id: string, providers: Providers) {
-		// if (!this.#chatIds.current.includes(id)) {
-		// 	this.#chatIds.current.push(id);
-		// }
-
-		const current = this.#cache.get(id);
-		if (current) return current;
-
-		const chat = new Chat(id, providers);
-		this.#cache.set(id, chat);
-		return chat;
-	}
-}
-
-export const chats = new Chats();

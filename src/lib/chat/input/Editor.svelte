@@ -33,9 +33,17 @@
 		embedded?: boolean;
 		onChange?: (value: string) => unknown;
 		onSubmit?: () => void;
+		disabled?: boolean;
 	}
 
-	let { value = $bindable(''), onChange, onSubmit }: Props = $props();
+	let {
+		onChange,
+		onSubmit,
+		value = $bindable(''),
+		disabled = false,
+	}: Props = $props();
+
+	const disabledCompartment = new Compartment();
 
 	function editor(root: HTMLDivElement) {
 		const editor = new EditorView({
@@ -54,6 +62,7 @@
 					highlightSelectionMatches(),
 					EditorView.lineWrapping,
 					syntaxHighlighting(highlightTheme),
+					disabledCompartment.of(EditorState.readOnly.of(disabled)),
 					EditorView.updateListener.of((newValue) => {
 						value = newValue.state.doc.toString();
 						onChange?.(value);
@@ -85,6 +94,14 @@
 						to: editor.state.doc.length,
 						insert: value,
 					},
+				});
+			}
+
+			if (disabled !== editor.state.readOnly) {
+				editor.dispatch({
+					effects: disabledCompartment.reconfigure(
+						EditorState.readOnly.of(disabled),
+					),
 				});
 			}
 		});

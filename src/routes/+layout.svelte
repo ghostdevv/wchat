@@ -1,9 +1,9 @@
 <script lang="ts">
 	import 'ghostsui';
 	import IconGripVertical from '~icons/lucide/grip-vertical';
+	import { AccountSchema, db } from '$lib/state/db.svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import { JazzSvelteProvider } from 'jazz-tools/svelte';
-	import { AccountSchema, db } from '$lib/state/db.svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import Sidebar from './Sidebar.svelte';
 	import type { Snippet } from 'svelte';
@@ -30,31 +30,38 @@
 <svelte:window bind:innerWidth />
 
 <div class="wrapper">
-	<PaneGroup direction="horizontal">
-		<Pane
-			defaultSize={panelMin}
-			minSize={panelMin}
-			onCollapse={() => (collapsed = true)}
-			onExpand={() => (collapsed = false)}
-			collapsible
-		>
-			<Sidebar />
-		</Pane>
+	<JazzSvelteProvider {AccountSchema} sync={db.syncConfig}>
+		<PaneGroup direction="horizontal">
+			<Pane
+				defaultSize={panelMin}
+				minSize={panelMin}
+				onCollapse={() => (collapsed = true)}
+				onExpand={() => (collapsed = false)}
+				collapsible
+			>
+				<Sidebar />
+			</Pane>
 
-		<PaneResizer class="resizer" onDraggingChange={(v) => (isDragging = v)}>
-			<div class="resizer-grip" class:active={isDragging} class:collapsed>
-				<IconGripVertical />
-			</div>
-		</PaneResizer>
+			<PaneResizer
+				class="resizer"
+				onDraggingChange={(v) => (isDragging = v)}
+			>
+				<div
+					class="resizer-grip"
+					class:active={isDragging}
+					class:collapsed
+				>
+					<IconGripVertical />
+				</div>
+			</PaneResizer>
 
-		<Pane minSize={33}>
-			<main class:chat={isChatPage}>
-				<JazzSvelteProvider {AccountSchema} sync={db.syncConfig}>
+			<Pane minSize={33}>
+				<main class:chat={isChatPage}>
 					{@render children()}
-				</JazzSvelteProvider>
-			</main>
-		</Pane>
-	</PaneGroup>
+				</main>
+			</Pane>
+		</PaneGroup>
+	</JazzSvelteProvider>
 </div>
 
 <style>

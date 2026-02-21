@@ -29,6 +29,9 @@ export const editorTheme = EditorView.theme(
 			minHeight: '90px',
 			maxHeight: '145px',
 		},
+		'.cm-content[aria-readonly="true"]': {
+			opacity: 0.6,
+		},
 	},
 	{ dark: true },
 );
