@@ -1,6 +1,7 @@
 import type { Providers } from './providers.svelte';
 import { CoState } from 'jazz-tools/svelte';
 import { ChatSchema } from './db.svelte';
+import { untrack } from 'svelte';
 import { dequal } from 'dequal';
 import {
 	convertToModelMessages,
@@ -16,7 +17,10 @@ class State<M extends UIMessage> implements ChatState<M> {
 	status = $state<ChatStatus>('ready');
 	error = $state<Error | undefined>();
 
-	constructor(messages: M[] = []) {
+	constructor(
+		private onChange: (messages: M[]) => void,
+		messages: M[] = [],
+	) {
 		this.messages = $state(messages);
 	}
 
@@ -26,14 +30,20 @@ class State<M extends UIMessage> implements ChatState<M> {
 
 	pushMessage = (message: M) => {
 		this.messages.push(message);
+		// oxlint-disable-next-line typescript-eslint(no-explicit-any)
+		this.onChange($state.snapshot(this.messages as any));
 	};
 
 	popMessage = () => {
 		this.messages.pop();
+		// oxlint-disable-next-line typescript-eslint(no-explicit-any)
+		this.onChange($state.snapshot(this.messages as any));
 	};
 
 	replaceMessage = (index: number, message: M) => {
 		this.messages[index] = message;
+		// oxlint-disable-next-line typescript-eslint(no-explicit-any)
+		this.onChange($state.snapshot(this.messages as any));
 	};
 
 	snapshot = <T>(thing: T) => $state.snapshot(thing) as T;
@@ -74,13 +84,19 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 		return !this.#state.current.$isLoaded || this.status !== 'ready';
 	}
 
+	get messages(): M[] {
+		return this.#state.current.$isLoaded
+			? (this.#state.current.messages as unknown as M[])
+			: [];
+	}
+
 	constructor(
 		public readonly id: string,
 		public readonly providers: Providers,
 	) {
 		super({
 			id,
-			state: new State<M>(),
+			state: new State<M>(onChange),
 			transport: {
 				sendMessages: async ({ messages, abortSignal }) => {
 					const providerId = this.providerId;
@@ -112,25 +128,25 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 			},
 		});
 
-		this.#state = new CoState(ChatSchema, id);
-		let ran = false;
+		const state = new CoState(ChatSchema, id);
+		this.#state = state;
+
+		function onChange(messages: M[]) {
+			if (!state.current.$isLoaded) return;
+			// oxlint-disable-next-line typescript-eslint(no-explicit-any)
+			state.current.$jazz.set('messages', messages as any);
+		}
 
 		$effect(() => {
-			if (this.messages && this.#state.current.$isLoaded) {
-				// prettier-ignore
-				const saved = $state.snapshot<unknown>(this.#state.current.messages);
+			const { current } = this.#state;
 
-				if (!ran) {
-					this.messages = saved;
-					ran = true;
-					return;
-				}
-
-				const messages = $state.snapshot<unknown>(this.messages);
-
-				if (!dequal(saved, messages)) {
-					this.#state.current.$jazz.set('messages', messages);
-				}
+			if (current.$isLoaded) {
+				untrack(() => {
+					const db = $state.snapshot<unknown>(current.messages);
+					const local = $state.snapshot<unknown>(super.messages);
+					if (dequal(db, local)) return;
+					super.messages = db;
+				});
 			}
 		});
 	}
