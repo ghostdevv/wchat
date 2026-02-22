@@ -15,7 +15,6 @@
 	},
 	"devDependencies": {
 		"@ai-sdk/openai": "^3.0.30",
-		"@ai-sdk/svelte": "^4.0.91",
 		"@codemirror/commands": "^6.10.2",
 		"@codemirror/lang-markdown": "^6.5.0",
 		"@codemirror/language": "^6.12.1",

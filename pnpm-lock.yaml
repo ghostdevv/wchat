@@ -11,9 +11,6 @@ importers:
       '@ai-sdk/openai':
         specifier: ^3.0.30
         version: 3.0.30(zod@4.3.6)
-      '@ai-sdk/svelte':
-        specifier: ^4.0.91
-        version: 4.0.91(svelte@5.53.0)(zod@4.3.6)
       '@codemirror/commands':
         specifier: ^6.10.2
         version: 6.10.2
@@ -131,11 +128,6 @@ packages:
   '@ai-sdk/provider@3.0.8':
     resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
     engines: {node: '>=18'}
-
-  '@ai-sdk/svelte@4.0.91':
-    resolution: {integrity: sha512-PieaQYKF7hBiOkH1ppWM/l5p/cew27+YGCdqIUpjXfaWuWyeRYVmC02OvVHQJta8X8rC1rrov3z0TmzKPYnHnw==}
-    peerDependencies:
-      svelte: ^5.31.0
 
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
@@ -3001,14 +2993,6 @@ snapshots:
   '@ai-sdk/provider@3.0.8':
     dependencies:
       json-schema: 0.4.0
-
-  '@ai-sdk/svelte@4.0.91(svelte@5.53.0)(zod@4.3.6)':
-    dependencies:
-      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
-      ai: 6.0.91(zod@4.3.6)
-      svelte: 5.53.0
-    transitivePeerDependencies:
-      - zod
 
   '@antfu/install-pkg@1.1.0':
     dependencies:
