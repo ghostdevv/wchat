@@ -3,6 +3,7 @@
 	import { AccountSchema } from '$lib/state/db.svelte';
 	import { AccountCoState } from 'jazz-tools/svelte';
 	import IconSettings from '~icons/lucide/settings';
+	import { resolve } from '$app/paths';
 
 	const account = new AccountCoState(AccountSchema, {
 		resolve: { root: { chats: { $each: true } } },
@@ -14,7 +15,11 @@
 		{#if account.current.$isLoaded}
 			{#each account.current.root.chats as chat (chat.$jazz.id)}
 				{@const name = chat.name?.trim() ?? chat.$jazz.id}
-				<a href="/chat/{chat.$jazz.id}" title={name}>
+
+				<a
+					href={resolve('/chat/[id]', { id: chat.$jazz.id })}
+					title={name}
+				>
 					{name}
 				</a>
 			{/each}
@@ -23,12 +28,12 @@
 
 	<hr />
 
-	<a href="/chat">
+	<a href={resolve('/chat')}>
 		<IconMessageCirclePlus />
 		New Chat
 	</a>
 
-	<a href="/settings">
+	<a href={resolve('/settings')}>
 		<IconSettings />
 		Settings
 	</a>
