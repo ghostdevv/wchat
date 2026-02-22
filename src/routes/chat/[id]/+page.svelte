@@ -1,18 +1,21 @@
 <script lang="ts">
 	import { Providers } from '$lib/state/providers.svelte';
 	import { Chat } from '$lib/state/chats.svelte';
-	import { goto } from '$app/navigation';
+	import { navigating } from '$app/state';
 	import Input from '../Input.svelte';
-	import { page } from '$app/state';
 
 	const { params } = $props();
 	const providers = new Providers();
 	const chat = $derived(new Chat(params.id, providers));
 
+	const newChat = navigating.from?.route.id === '/chat/new';
 	$effect(() => {
-		if (page.url.searchParams.has('new')) {
-			page.url.searchParams.delete('new');
-			goto(page.url, { replaceState: true });
+		if (newChat && !chat.loading && chat.messages.length === 1) {
+			const lastMessage = chat.lastMessage;
+
+			if (lastMessage?.role === 'user') {
+				chat.regenerate({ messageId: lastMessage.id });
+			}
 		}
 	});
 </script>
@@ -36,6 +39,7 @@
 </ul>
 
 <Input
+	disabled={chat.loading}
 	bind:modelId={chat.modelId}
 	bind:providerId={chat.providerId}
 	onSubmit={async (text) => {

@@ -62,6 +62,9 @@ importers:
       ai:
         specifier: ^6.0.91
         version: 6.0.91(zod@4.3.6)
+      dequal:
+        specifier: ^2.0.3
+        version: 2.0.3
       ghostsui:
         specifier: 2.0.0-beta.6
         version: 2.0.0-beta.6

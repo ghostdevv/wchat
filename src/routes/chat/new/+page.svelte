@@ -18,9 +18,18 @@
 			return false;
 		}
 
-		const chat = ChatSchema.create({ providerId, modelId });
-		account.current.root.chats.$jazz.push(chat);
+		const chat = ChatSchema.create({
+			providerId,
+			modelId,
+			messages: [
+				{
+					role: 'user',
+					parts: [{ type: 'text', state: 'done', text }],
+				},
+			],
+		});
 
+		account.current.root.chats.$jazz.push(chat);
 		await goto(`${resolve('/chat/[id]', { id: chat.$jazz.id })}?new`);
 
 		return true;

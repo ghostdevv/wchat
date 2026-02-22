@@ -1,6 +1,7 @@
 import type { Providers } from './providers.svelte';
 import { CoState } from 'jazz-tools/svelte';
 import { ChatSchema } from './db.svelte';
+import { dequal } from 'dequal';
 import {
 	convertToModelMessages,
 	type ChatStatus,
@@ -69,6 +70,10 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 			: null;
 	}
 
+	get loading() {
+		return !this.#state.current.$isLoaded || this.status !== 'ready';
+	}
+
 	constructor(
 		public readonly id: string,
 		public readonly providers: Providers,
@@ -108,5 +113,25 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 		});
 
 		this.#state = new CoState(ChatSchema, id);
+		let ran = false;
+
+		$effect(() => {
+			if (this.messages && this.#state.current.$isLoaded) {
+				// prettier-ignore
+				const saved = $state.snapshot<unknown>(this.#state.current.messages);
+
+				if (!ran) {
+					this.messages = saved;
+					ran = true;
+					return;
+				}
+
+				const messages = $state.snapshot<unknown>(this.messages);
+
+				if (!dequal(saved, messages)) {
+					this.#state.current.$jazz.set('messages', messages);
+				}
+			}
+		});
 	}
 }

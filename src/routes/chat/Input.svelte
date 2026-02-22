@@ -7,6 +7,7 @@
 		modelId: string | null;
 		providerId: string | null;
 		onSubmit: (text: string) => Promise<boolean>;
+		disabled?: boolean;
 	}
 
 	let {
@@ -15,15 +16,17 @@
 		...props
 	}: Props = $props();
 
-	let disabled = $state(false);
+	let submitting = $state(false);
 	let input = $state('');
 
 	async function onSubmit() {
-		disabled = true;
+		submitting = true;
 		const success = await props.onSubmit(input);
 		if (success) input = '';
-		disabled = false;
+		submitting = false;
 	}
+
+	const disabled = $derived((submitting || props.disabled) ?? false);
 </script>
 
 <div class="input">
