@@ -46,7 +46,6 @@
 	);
 
 	$effect(() => {
-		console.log('effectin');
 		return jazz.current.addConnectionListener((c) => {
 			connected = c;
 		});
