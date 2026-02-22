@@ -26,16 +26,25 @@
 		submitting = false;
 	}
 
-	const disabled = $derived((submitting || props.disabled) ?? false);
+	const hasModelSelected = $derived(!!(modelId && providerId));
+	const disabled = $derived(submitting || !!props.disabled);
 </script>
 
 <div class="input">
-	<Editor bind:value={input} {disabled} {onSubmit} />
+	<Editor
+		bind:value={input}
+		{onSubmit}
+		disabled={disabled || !hasModelSelected}
+	/>
 
 	<div class="controls">
-		<ModelSelect {disabled} bind:modelId bind:providerId />
+		<ModelSelect bind:modelId bind:providerId {disabled} />
 
-		<button class="outline" onclick={onSubmit} {disabled}>
+		<button
+			class="outline"
+			onclick={onSubmit}
+			disabled={disabled || !hasModelSelected}
+		>
 			<IconArrowUp />
 		</button>
 	</div>
