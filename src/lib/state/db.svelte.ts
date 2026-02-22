@@ -20,6 +20,7 @@ export const ChatSchema = co.map({
 	providerId: z.string().min(1).nullable(),
 	modelId: z.string().min(1).nullable(),
 	messages: z.array(z.json()),
+	locked: z.boolean(),
 });
 
 export type ChatData = co.output<typeof ChatSchema>;

@@ -21,6 +21,7 @@
 		const chat = ChatSchema.create({
 			providerId,
 			modelId,
+			locked: false,
 			messages: [
 				{
 					role: 'user',

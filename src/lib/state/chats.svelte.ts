@@ -81,7 +81,11 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 	}
 
 	get loading() {
-		return !this.#state.current.$isLoaded || this.status !== 'ready';
+		return (
+			!this.#state.current.$isLoaded ||
+			this.#state.current.locked ||
+			this.status !== 'ready'
+		);
 	}
 
 	get messages(): M[] {
@@ -136,6 +140,19 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 			// oxlint-disable-next-line typescript-eslint(no-explicit-any)
 			state.current.$jazz.set('messages', messages as any);
 		}
+
+		$effect(() => {
+			const locked = this.status !== 'ready';
+
+			untrack(() => {
+				if (
+					this.#state.current.$isLoaded &&
+					this.#state.current.locked !== locked
+				) {
+					this.#state.current.$jazz.set('locked', locked);
+				}
+			});
+		});
 
 		$effect(() => {
 			const { current } = this.#state;
