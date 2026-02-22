@@ -18,7 +18,7 @@
 		const passphrase = formData.get('passphrase') as string;
 		const peer = formData.get('peer') as string;
 
-		if (!peer.startsWith('wss://')) {
+		if (!peer.startsWith('wss://') && !peer.startsWith('ws://')) {
 			disabled = false;
 			throw new Error('Invalid peer URL');
 		}
