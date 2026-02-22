@@ -7,8 +7,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    push:
-        name: 'node_${{ matrix.node }}'
+    release:
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
