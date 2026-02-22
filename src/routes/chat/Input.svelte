@@ -23,13 +23,14 @@
 	let input = $state('');
 
 	async function onSubmit() {
+		if (!input.trim()) return;
 		submitting = true;
-		const success = await props.onSubmit(input);
+		const success = await props.onSubmit(input.trim());
 		if (success) input = '';
 		submitting = false;
 	}
 
-	const hasModelSelected = $derived(!!(modelId && providerId));
+	const submitDisabled = $derived(!modelId || !providerId);
 	const disabled = $derived(submitting || !!props.disabled);
 </script>
 
@@ -37,7 +38,7 @@
 	<Editor
 		bind:value={input}
 		{onSubmit}
-		disabled={disabled || !hasModelSelected}
+		disabled={disabled || submitDisabled}
 	/>
 
 	<div class="controls">
@@ -48,7 +49,7 @@
 		<button
 			class="outline"
 			onclick={onSubmit}
-			disabled={disabled || !hasModelSelected}
+			disabled={disabled || submitDisabled || !input.trim()}
 		>
 			<IconArrowUp />
 		</button>
