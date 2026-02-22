@@ -2,10 +2,12 @@
 	import Editor from '$lib/chat/input/Editor.svelte';
 	import IconArrowUp from '~icons/lucide/arrow-up';
 	import ModelSelect from './ModelSelect.svelte';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		modelId: string | null;
 		providerId: string | null;
+		children?: Snippet;
 		onSubmit: (text: string) => Promise<boolean>;
 		disabled?: boolean;
 	}
@@ -13,6 +15,7 @@
 	let {
 		modelId = $bindable(),
 		providerId = $bindable(),
+		children,
 		...props
 	}: Props = $props();
 
@@ -40,6 +43,8 @@
 	<div class="controls">
 		<ModelSelect bind:modelId bind:providerId {disabled} />
 
+		{@render children?.()}
+
 		<button
 			class="outline"
 			onclick={onSubmit}
@@ -60,9 +65,12 @@
 		.controls {
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
 
-			button {
+			> :global(:nth-child(2)) {
+				margin-left: auto;
+			}
+
+			> :global(button) {
 				display: grid;
 				place-items: center;
 				font-size: 0.95rem;

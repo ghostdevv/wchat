@@ -13,8 +13,9 @@
 	<div class="chats">
 		{#if account.current.$isLoaded}
 			{#each account.current.root.chats as chat (chat.$jazz.id)}
-				<a href="/chat/{chat.$jazz.id}" title={chat.$jazz.id}>
-					{chat.$jazz.id}
+				{@const name = chat.name?.trim() ?? chat.$jazz.id}
+				<a href="/chat/{chat.$jazz.id}" title={name}>
+					{name}
 				</a>
 			{/each}
 		{/if}

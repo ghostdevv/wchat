@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Providers } from '$lib/state/providers.svelte';
 	import { Chat } from '$lib/state/chats.svelte';
+	import Settings from './Settings.svelte';
 	import { navigating } from '$app/state';
 	import Input from '../Input.svelte';
 
@@ -46,7 +47,9 @@
 		await chat.sendMessage({ text });
 		return true;
 	}}
-/>
+>
+	<Settings {chat} />
+</Input>
 
 <style>
 	ul {

@@ -266,45 +266,6 @@
 		font-style: italic;
 	}
 
-	dialog {
-		padding: 18px;
-		border-radius: 12px;
-
-		color: var(--text);
-		background: var(--background-primary);
-		border: 2px solid var(--background-secondary);
-		box-shadow: 0px 0px 16px rgba(var(--background-tertiary-rgb), 0.3);
-
-		opacity: 0;
-		scale: 0.95;
-		transition:
-			opacity 0.2s ease-in,
-			scale 0.2s ease-in;
-
-		&::backdrop {
-			display: none;
-		}
-
-		&[data-open] {
-			opacity: 1;
-			scale: 1;
-		}
-	}
-
-	[data-melt-dialog-overlay] {
-		position: fixed;
-		width: 100%;
-		height: 100%;
-
-		background: rgba(18, 18, 20, 0.8);
-		transition: opacity 0.2s ease-in;
-		opacity: 0;
-
-		&[data-open] {
-			opacity: 1;
-		}
-	}
-
 	h3 {
 		margin: 0 0 16px 0;
 	}
@@ -312,10 +273,6 @@
 	label {
 		width: 100%;
 		margin-bottom: 12px;
-
-		input {
-			margin-top: 6px;
-		}
 	}
 
 	.actions {

@@ -97,14 +97,6 @@
 		justify-content: space-between;
 	}
 
-	label {
-		width: 100%;
-
-		input {
-			margin-top: 6px;
-		}
-	}
-
 	.state {
 		display: flex;
 		align-items: center;

@@ -80,6 +80,19 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 			: null;
 	}
 
+	get name(): string | null | undefined {
+		return this.#state.current.$isLoaded ? this.#state.current.name : null;
+	}
+
+	set name(name: string | undefined) {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('chat is not loaded');
+		}
+
+		// oxlint-disable-next-line eslint(no-undefined)
+		this.#state.current.$jazz.set('name', name || undefined);
+	}
+
 	get loading() {
 		return (
 			!this.#state.current.$isLoaded ||
