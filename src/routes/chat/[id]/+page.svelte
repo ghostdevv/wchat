@@ -57,6 +57,8 @@
 		overflow-y: auto;
 
 		li {
+			white-space: pre-wrap;
+
 			&:not(:last-child) {
 				margin-bottom: 22px;
 			}
