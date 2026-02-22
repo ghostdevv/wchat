@@ -35,6 +35,9 @@ importers:
       '@e18e/eslint-plugin':
         specifier: ^0.2.0
         version: 0.2.0(eslint@9.39.2)(oxlint@1.49.0)
+      '@ghostsui/svelte':
+        specifier: 1.0.0-beta.1
+        version: 1.0.0-beta.1(@floating-ui/dom@1.7.5)(ghostsui@2.0.0-beta.8)(svelte@5.53.2)
       '@iconify-json/lucide':
         specifier: ^1.2.93
         version: 1.2.93
@@ -63,8 +66,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       ghostsui:
-        specifier: 2.0.0-beta.7
-        version: 2.0.0-beta.7
+        specifier: 2.0.0-beta.8
+        version: 2.0.0-beta.8
       jazz-tools:
         specifier: ^0.20.10
         version: 0.20.10(@tiptap/pm@2.27.2)(csstype@3.2.3)(react-native@0.84.0(@babel/core@7.29.0)(react@19.2.4))(react@19.2.4)(svelte@5.53.2)
@@ -589,6 +592,12 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@ghostsui/svelte@1.0.0-beta.1':
+    resolution: {integrity: sha512-K35Xe5sfXS7gjdIum0kjXGeQHvjFsLHyNBTN9fBiFkRYnC6CvPP0wEC8xdD0kV7GgqiTn3+DgnCcoMH9A18zqw==}
+    peerDependencies:
+      ghostsui: ^2.0.0-beta.8
+      svelte: ^5.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1773,8 +1782,8 @@ packages:
     resolution: {integrity: sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==}
     engines: {node: '>=8.0.0'}
 
-  ghostsui@2.0.0-beta.7:
-    resolution: {integrity: sha512-5yudyrCnB+rdVZwroG/MjG50TJkuBJVfexLFNJe3rA5qjXsQwmsdWV9zzQCCTOT0EXGB1vlMm5TKBDLB6gSOfQ==}
+  ghostsui@2.0.0-beta.8:
+    resolution: {integrity: sha512-XGI29s8z+ERW0xCcG9PQ5R1ckawa87s7goiP3UPY/rVBMz3rU2Q1DNx/M3SkxhW8VIycHotas49xftsP3sL4lw==}
 
   glob-parent@6.0.2:
     resolution: {integrity: sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==}
@@ -3551,6 +3560,14 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
+  '@ghostsui/svelte@1.0.0-beta.1(@floating-ui/dom@1.7.5)(ghostsui@2.0.0-beta.8)(svelte@5.53.2)':
+    dependencies:
+      ghostsui: 2.0.0-beta.8
+      melt: 0.44.0(@floating-ui/dom@1.7.5)(svelte@5.53.2)
+      svelte: 5.53.2
+    transitivePeerDependencies:
+      - '@floating-ui/dom'
+
   '@humanfs/core@0.19.1':
     optional: true
 
@@ -4761,7 +4778,7 @@ snapshots:
 
   get-package-type@0.1.0: {}
 
-  ghostsui@2.0.0-beta.7: {}
+  ghostsui@2.0.0-beta.8: {}
 
   glob-parent@6.0.2:
     dependencies:

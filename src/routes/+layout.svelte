@@ -1,6 +1,5 @@
 <script lang="ts">
 	import 'ghostsui';
-	import '$lib/global.css';
 	import IconGripVertical from '~icons/lucide/grip-vertical';
 	import { AccountSchema, sync } from '$lib/state/db.svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';

@@ -2,10 +2,10 @@
 	import { Provider, Providers } from '$lib/state/providers.svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
 	import IconRefresh from '~icons/lucide/refresh-cw';
+	import { Modal } from '@ghostsui/svelte/modal';
 	import IconTrash from '~icons/lucide/trash-2';
 	import IconPlus from '~icons/lucide/plus';
 	import IconEdit from '~icons/lucide/edit';
-	import { Dialog } from 'melt/builders';
 
 	const providers = new Providers();
 
@@ -18,19 +18,17 @@
 
 	const disabled = $derived(!providers.ready || saving);
 
-	const dialog = new Dialog({
-		onOpenChange(open) {
-			if (!open) {
-				editing = false;
-				name = '';
-				baseURL = '';
-				apiKey = null;
-			}
-		},
-	});
+	let open = $state(false);
+
+	function onClose() {
+		editing = false;
+		name = '';
+		baseURL = '';
+		apiKey = null;
+	}
 
 	function handleEdit(provider: Provider) {
-		dialog.open = true;
+		open = true;
 		editing = provider;
 		name = provider.current?.name ?? '';
 		baseURL = provider.current?.baseURL ?? '';
@@ -53,17 +51,74 @@
 			await providers.create(name, baseURL, apiKey);
 		}
 
-		dialog.open = false;
+		open = false;
 		saving = false;
 	}
 </script>
 
 <section>
 	<div class="title">
-		<h2>Providers</h2>
-		<button class="icon" {...dialog.trigger}>
-			<IconPlus />
-		</button>
+		<h2>Providers {open}</h2>
+
+		<Modal bind:open {onClose}>
+			{#snippet activator(attrs)}
+				<button class="icon" {...attrs}>
+					<IconPlus />
+				</button>
+			{/snippet}
+
+			<form onsubmit={handleSubmit}>
+				<h3>{editing ? 'Edit' : 'Add'} Provider</h3>
+
+				<label>
+					Name*
+					<input
+						type="text"
+						placeholder="llama.cpp"
+						bind:value={name}
+						required
+						{disabled}
+					/>
+				</label>
+
+				<label>
+					Base URL*
+					<input
+						type="url"
+						placeholder="https://example.com/v1"
+						bind:value={baseURL}
+						required
+						{disabled}
+					/>
+				</label>
+
+				<label>
+					API Key
+					<PasswordInput
+						bind:value={apiKey}
+						{disabled}
+						placeholder={editing
+							? 'Leave empty to keep existing'
+							: 'Optional'}
+					/>
+				</label>
+
+				<div class="actions">
+					<button
+						type="button"
+						class="outline"
+						onclick={() => (open = false)}
+						{disabled}
+					>
+						Cancel
+					</button>
+
+					<button type="submit" {disabled}>
+						{editing ? 'Save' : 'Add'}
+					</button>
+				</div>
+			</form>
+		</Modal>
 	</div>
 
 	<ul class="providers">
@@ -127,62 +182,6 @@
 		{/each}
 	</ul>
 </section>
-
-<div {...dialog.overlay}></div>
-
-<dialog {...dialog.content}>
-	<form onsubmit={handleSubmit}>
-		<h3>{editing ? 'Edit' : 'Add'} Provider</h3>
-
-		<label>
-			Name*
-			<input
-				type="text"
-				placeholder="llama.cpp"
-				bind:value={name}
-				required
-				{disabled}
-			/>
-		</label>
-
-		<label>
-			Base URL*
-			<input
-				type="url"
-				placeholder="https://example.com/v1"
-				bind:value={baseURL}
-				required
-				{disabled}
-			/>
-		</label>
-
-		<label>
-			API Key
-			<PasswordInput
-				bind:value={apiKey}
-				{disabled}
-				placeholder={editing
-					? 'Leave empty to keep existing'
-					: 'Optional'}
-			/>
-		</label>
-
-		<div class="actions">
-			<button
-				type="button"
-				class="outline"
-				onclick={() => (dialog.open = false)}
-				{disabled}
-			>
-				Cancel
-			</button>
-
-			<button type="submit" {disabled}>
-				{editing ? 'Save' : 'Add'}
-			</button>
-		</div>
-	</form>
-</dialog>
 
 <style>
 	.title {

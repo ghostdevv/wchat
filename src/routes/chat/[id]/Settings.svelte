@@ -2,23 +2,22 @@
 	import type { Chat } from '$lib/state/chats.svelte';
 	import IconSettings from '~icons/lucide/settings';
 	import IconSparkles from '~icons/lucide/sparkles';
-	import { Dialog } from 'melt/builders';
+	import { Modal } from '@ghostsui/svelte/modal';
 
 	interface Props {
 		chat: Chat;
 	}
 
 	const { chat }: Props = $props();
-	const dialog = new Dialog();
 </script>
 
-<button class="outline" {...dialog.trigger}>
-	<IconSettings />
-</button>
+<Modal>
+	{#snippet activator(attrs)}
+		<button class="outline" {...attrs}>
+			<IconSettings />
+		</button>
+	{/snippet}
 
-<div {...dialog.overlay}></div>
-
-<dialog {...dialog.content}>
 	<label for="name"> Name </label>
 
 	<div class="name">
@@ -38,7 +37,7 @@
 			<IconSparkles />
 		</button>
 	</div>
-</dialog>
+</Modal>
 
 <style>
 	.name {
