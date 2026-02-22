@@ -37,9 +37,22 @@
 	}
 </script>
 
-<div></div>
+<div>
+	<img
+		src="https://wsrv.nl/?url=https://www.explainxkcd.com/wiki/images/b/bb/turing_test.png&filt=negate&w=250&cx=1%&cy=1%&cw=98%&ch=98%"
+		alt="xkcd #329"
+	/>
+</div>
 
 <Input bind:modelId bind:providerId {onSubmit} />
 
 <style>
+	div {
+		display: grid;
+		place-items: center;
+
+		img {
+			border-radius: 12px;
+		}
+	}
 </style>
