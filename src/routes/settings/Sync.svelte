@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { getJazzContext, usePassphraseAuth } from 'jazz-tools/svelte';
 	import { sync, type Peer } from '$lib/state/db.svelte';
-	import { usePassphraseAuth } from 'jazz-tools/svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
 	import { wordlist } from './wordlist';
 
@@ -38,9 +38,19 @@
 		disabled = false;
 	}
 
+	const jazz = getJazzContext();
+	let connected = $state(jazz.current.connected());
+
 	const authState = $derived(
-		auth.state === 'signedIn' ? 'enabled' : 'disabled',
+		auth.state === 'signedIn' && connected ? 'connected' : 'disconnected',
 	);
+
+	$effect(() => {
+		console.log('effectin');
+		return jazz.current.addConnectionListener((c) => {
+			connected = c;
+		});
+	});
 </script>
 
 <section>
@@ -108,11 +118,11 @@
 			height: 10px;
 			border-radius: 100%;
 
-			&.enabled {
+			&.connected {
 				background-color: var(--green);
 			}
 
-			&.disabled {
+			&.disconnected {
 				background-color: var(--red);
 			}
 		}
