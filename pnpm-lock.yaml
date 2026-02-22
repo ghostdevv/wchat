@@ -63,8 +63,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       ghostsui:
-        specifier: 2.0.0-beta.6
-        version: 2.0.0-beta.6
+        specifier: 2.0.0-beta.7
+        version: 2.0.0-beta.7
       jazz-tools:
         specifier: ^0.20.10
         version: 0.20.10(@tiptap/pm@2.27.2)(csstype@3.2.3)(react-native@0.84.0(@babel/core@7.29.0)(react@19.2.4))(react@19.2.4)(svelte@5.53.2)
@@ -1773,8 +1773,8 @@ packages:
     resolution: {integrity: sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==}
     engines: {node: '>=8.0.0'}
 
-  ghostsui@2.0.0-beta.6:
-    resolution: {integrity: sha512-IYFeXJw7NjIHH/dGfI/13FnspP5pK8FzI2hWm1cap7h3q3XGhuA/gxZe5zm725RyXgWOhBTofkNiASLbS2Vkeg==}
+  ghostsui@2.0.0-beta.7:
+    resolution: {integrity: sha512-5yudyrCnB+rdVZwroG/MjG50TJkuBJVfexLFNJe3rA5qjXsQwmsdWV9zzQCCTOT0EXGB1vlMm5TKBDLB6gSOfQ==}
 
   glob-parent@6.0.2:
     resolution: {integrity: sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==}
@@ -4761,7 +4761,7 @@ snapshots:
 
   get-package-type@0.1.0: {}
 
-  ghostsui@2.0.0-beta.6: {}
+  ghostsui@2.0.0-beta.7: {}
 
   glob-parent@6.0.2:
     dependencies:
