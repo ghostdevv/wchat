@@ -22,10 +22,24 @@
 
 	const panelMin = $derived(Math.ceil((200 / innerWidth) * 100));
 	const isChatPage = $derived(page.url.pathname === '/');
+
+	const title = $derived.by(() => {
+		switch (page.route.id) {
+			case '/chat/[id]':
+				return 'chat ~ wchat';
+			case '/settings':
+				return 'settings ~ wchat';
+			case '/chat/new':
+				return 'new ~ wchat';
+			default:
+				return 'wchat';
+		}
+	});
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>{title}</title>
 </svelte:head>
 
 <svelte:window bind:innerWidth />
