@@ -109,6 +109,7 @@
 
 			padding: 4px 8px;
 			padding-right: 2px;
+			margin: 0px;
 
 			.chevron {
 				display: grid;

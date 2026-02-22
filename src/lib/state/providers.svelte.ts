@@ -153,4 +153,15 @@ export class Providers {
 
 		this.#cache.delete(id);
 	}
+
+	getModelOrThrow(providerId: string | null, modelId: string | null) {
+		if (!providerId || !modelId) {
+			throw new Error('Provider or model ID not set');
+		}
+
+		const provider = this.current.find((p) => p.id === providerId);
+		if (!provider) throw new Error('Provider not found');
+
+		return provider.chatModel(modelId);
+	}
 }

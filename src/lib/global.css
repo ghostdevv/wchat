@@ -40,7 +40,8 @@ dialog {
 label {
 	width: 100%;
 
-	input {
+	input,
+	textarea {
 		margin-top: 6px;
 	}
 }

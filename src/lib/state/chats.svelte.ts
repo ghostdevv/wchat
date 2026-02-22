@@ -1,13 +1,16 @@
 import type { Providers } from './providers.svelte';
+import { NameGenSettings } from './settings.svelte';
 import { CoState } from 'jazz-tools/svelte';
 import { ChatSchema } from './db.svelte';
 import { untrack } from 'svelte';
 import { dequal } from 'dequal';
 import {
 	convertToModelMessages,
+	type ModelMessage,
 	type ChatStatus,
 	type ChatState,
 	type UIMessage,
+	generateText,
 	AbstractChat,
 	streamText,
 } from 'ai';
@@ -116,25 +119,15 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 			state: new State<M>(onChange),
 			transport: {
 				sendMessages: async ({ messages, abortSignal }) => {
-					const providerId = this.providerId;
-					const modelId = this.modelId;
-
-					if (!providerId || !modelId) {
-						throw new Error('Provider or model ID not set');
-					}
-
-					const provider = providers.current.find(
-						(p) => p.id === providerId,
+					const model = this.providers.getModelOrThrow(
+						this.providerId,
+						this.modelId,
 					);
 
-					if (!provider) {
-						throw new Error('Provider not found');
-					}
-
 					const stream = streamText({
-						model: provider.chatModel(modelId),
 						messages: await convertToModelMessages(messages),
 						abortSignal,
+						model,
 					});
 
 					return stream.toUIMessageStream();
@@ -147,6 +140,8 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 
 		const state = new CoState(ChatSchema, id);
 		this.#state = state;
+
+		this.#nameSettings = new NameGenSettings();
 
 		function onChange(messages: M[]) {
 			if (!state.current.$isLoaded) return;
@@ -179,5 +174,68 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 				});
 			}
 		});
+	}
+
+	generatingName = $state(false);
+	#nameSettings: NameGenSettings;
+
+	async generateName() {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('Chat is not loaded');
+		}
+
+		const prompt = this.#nameSettings.prompt.trim();
+
+		if (!prompt) {
+			throw new Error('No prompt provided');
+		}
+
+		const model = this.providers.getModelOrThrow(
+			this.#nameSettings.providerId,
+			this.#nameSettings.modelId,
+		);
+
+		if (this.generatingName) {
+			throw new Error('Name generation already in progress');
+		}
+
+		this.generatingName = true;
+
+		const message = this.messages.find(
+			(message) =>
+				message.role === 'user' &&
+				message.parts.some((p) => p.type === 'text') &&
+				message.parts.length > 0,
+		);
+
+		if (!message) {
+			this.generatingName = false;
+			throw new Error('No user message found');
+		}
+
+		const { text } = await generateText({
+			model,
+			maxOutputTokens: 32,
+			messages: [
+				{
+					role: 'system',
+					content: prompt,
+				},
+				...message.parts
+					.filter((part) => part.type === 'text')
+					.map(
+						(part): ModelMessage => ({
+							role: 'user',
+							content: part.text,
+						}),
+					),
+			],
+		});
+
+		if (this.#state.current.$isLoaded) {
+			this.#state.current.$jazz.set('name', text);
+		}
+
+		this.generatingName = false;
 	}
 }

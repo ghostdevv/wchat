@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Editor from '$lib/chat/input/Editor.svelte';
+	import ModelSelect from '$lib/ModelSelect.svelte';
 	import IconArrowUp from '~icons/lucide/arrow-up';
-	import ModelSelect from './ModelSelect.svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Props {

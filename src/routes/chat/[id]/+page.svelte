@@ -15,7 +15,9 @@
 			const lastMessage = chat.lastMessage;
 
 			if (lastMessage?.role === 'user') {
-				chat.regenerate({ messageId: lastMessage.id });
+				chat.regenerate({ messageId: lastMessage.id }).then(() =>
+					chat.generateName(),
+				);
 			}
 		}
 	});
