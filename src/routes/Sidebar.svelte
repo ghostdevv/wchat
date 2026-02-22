@@ -8,22 +8,28 @@
 	const account = new AccountCoState(AccountSchema, {
 		resolve: { root: { chats: { $each: true } } },
 	});
+
+	const chats = $derived(
+		account.current.$isLoaded
+			? account.current.root.chats
+					.toSorted(
+						(a, b) => b.$jazz.lastUpdatedAt - a.$jazz.lastUpdatedAt,
+					)
+					.map((chat) => ({
+						id: chat.$jazz.id,
+						name: chat.name?.trim() ?? chat.$jazz.id,
+					}))
+			: [],
+	);
 </script>
 
 <nav class="sidebar">
 	<div class="chats">
-		{#if account.current.$isLoaded}
-			{#each account.current.root.chats as chat (chat.$jazz.id)}
-				{@const name = chat.name?.trim() ?? chat.$jazz.id}
-
-				<a
-					href={resolve('/chat/[id]', { id: chat.$jazz.id })}
-					title={name}
-				>
-					{name}
-				</a>
-			{/each}
-		{/if}
+		{#each chats as chat (chat.id)}
+			<a href={resolve('/chat/[id]', { id: chat.id })} title={chat.name}>
+				{chat.name}
+			</a>
+		{/each}
 	</div>
 
 	<hr />
