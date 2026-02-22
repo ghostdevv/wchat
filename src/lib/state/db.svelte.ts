@@ -74,6 +74,8 @@ export const AccountSchema = co
 		}
 	});
 
+export type Peer = `wss://${string}` | `ws://${string}` | null;
+
 class Sync {
 	#enabled = new PersistedState('wchat::sync-enabled', false);
 
@@ -85,16 +87,13 @@ class Sync {
 		this.#enabled.current = value;
 	}
 
-	#peer = new PersistedState<`wss://${string}` | null>(
-		'wchat::sync-peer',
-		null,
-	);
+	#peer = new PersistedState<Peer>('wchat::sync-peer', null);
 
 	get peer() {
 		return this.#peer.current;
 	}
 
-	set peer(value: `wss://${string}` | null) {
+	set peer(value: Peer) {
 		this.#peer.current = value;
 	}
 
