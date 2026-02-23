@@ -84,9 +84,12 @@
 
 <style>
 	.wrapper {
-		padding: 10px;
 		width: 100dvw;
+		max-width: 1800px;
 		height: 100dvh;
+
+		padding: 10px;
+		margin: 0 auto;
 	}
 
 	main {
