@@ -130,6 +130,7 @@
 			border-radius: 12px;
 			cursor: pointer;
 			box-shadow: 0px 0px 16px rgba(var(--background-primary-rgb), 0.5);
+			max-height: 300px;
 		}
 
 		[data-melt-select-option] {

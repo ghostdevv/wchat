@@ -265,6 +265,11 @@
 					color: var(--text-grey);
 					vertical-align: middle;
 				}
+
+				ul {
+					max-height: 300px;
+					overflow-y: auto;
+				}
 			}
 		}
 	}
