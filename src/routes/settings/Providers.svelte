@@ -124,6 +124,7 @@
 					<PasswordInput
 						bind:value={apiKey}
 						{disabled}
+						required={false}
 						placeholder={editing
 							? 'Leave empty to keep existing'
 							: 'Optional'}

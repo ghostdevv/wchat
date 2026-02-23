@@ -6,6 +6,7 @@
 	export let placeholder = '';
 	export let name = 'password';
 	export let disabled = false;
+	export let required = true;
 
 	let type: 'text' | 'password' = 'password';
 
@@ -23,7 +24,7 @@
 		{placeholder}
 		id={name}
 		on:input={(event) => (value = event.currentTarget.value)}
-		required
+		{required}
 	/>
 
 	<button type="button" on:click={toggle} class="icon toggle" {disabled}>
