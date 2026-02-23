@@ -9,6 +9,7 @@
 		history,
 		historyKeymap,
 		indentWithTab,
+		insertNewline,
 	} from '@codemirror/commands';
 	import {
 		bracketMatching,
@@ -69,12 +70,15 @@
 					}),
 					keymap.of([
 						{
-							key: 'Mod-Enter',
-							preventDefault: true,
+							key: 'Enter',
 							run() {
 								onSubmit?.();
 								return true;
 							},
+						},
+						{
+							key: 'Shift-Enter',
+							run: insertNewline,
 						},
 						...defaultKeymap,
 						...searchKeymap,
