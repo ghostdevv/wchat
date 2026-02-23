@@ -74,6 +74,9 @@
 		.controls {
 			display: flex;
 			align-items: center;
+			gap: 8px;
+
+			max-width: 100%;
 
 			> :global(:nth-child(2)) {
 				margin-left: auto;
@@ -84,6 +87,7 @@
 				place-items: center;
 				font-size: 0.95rem;
 				padding: 4px;
+				margin: 0px;
 			}
 		}
 	}

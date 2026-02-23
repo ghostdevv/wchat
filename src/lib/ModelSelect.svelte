@@ -103,13 +103,22 @@
 <style>
 	.select {
 		[data-melt-select-trigger] {
-			display: flex;
+			display: grid;
 			align-items: center;
+			grid-template-columns: 1fr max-content;
 			gap: 4px;
 
 			padding: 4px 8px;
 			padding-right: 2px;
 			margin: 0px;
+
+			max-width: 100%;
+
+			span {
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
 
 			.chevron {
 				display: grid;
