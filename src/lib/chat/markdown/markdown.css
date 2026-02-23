@@ -1,0 +1,47 @@
+.markdown {
+	max-width: 100%;
+
+	& > :first-child {
+		margin-top: 0px;
+		padding-top: 0px;
+	}
+
+	p {
+		margin: 12px 0px;
+	}
+
+	h1 {
+		padding: 8px 0px;
+		border-bottom: 4px solid var(--background-secondary);
+
+		&:not(&:first-child) {
+			margin-top: 32px;
+		}
+	}
+
+	h1,
+	h2 {
+		font-weight: 600;
+		margin-top: 24px;
+		color: #fff;
+	}
+
+	h3,
+	h4 {
+		font-weight: 600;
+		margin-top: 28px;
+	}
+
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+
+	:is(ul, ol) li p {
+		display: inline;
+	}
+
+	.markdown-alert {
+		padding: 4px 16px;
+	}
+}

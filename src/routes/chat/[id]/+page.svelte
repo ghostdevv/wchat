@@ -1,10 +1,11 @@
 <script lang="ts">
+	import Markdown from '$lib/chat/markdown/Markdown.svelte';
 	import { Providers } from '$lib/state/providers.svelte';
+	import { toast } from '@ghostsui/svelte/toasts';
 	import { Chat } from '$lib/state/chats.svelte';
 	import Settings from './Settings.svelte';
 	import { navigating } from '$app/state';
 	import Input from '../Input.svelte';
-	import { toast } from '@ghostsui/svelte/toasts';
 
 	const { params } = $props();
 	const providers = new Providers();
@@ -37,7 +38,7 @@
 		<li class:user={message.role === 'user'}>
 			{#each message.parts as part, partIndex (partIndex)}
 				{#if part.type === 'text'}
-					<p>{part.text}</p>
+					<Markdown text={part.text} />
 				{/if}
 			{/each}
 		</li>
@@ -64,8 +65,8 @@
 		list-style: none;
 		overflow-y: auto;
 
-		li {
-			white-space: pre-wrap;
+		> li {
+			display: block;
 
 			&:not(:last-child) {
 				margin-bottom: 22px;
@@ -75,9 +76,19 @@
 				background-color: var(--background-secondary);
 				border-radius: 12px;
 				font-style: italic;
-				padding: 6px 12px;
+				padding: 12px;
 				margin-left: auto;
 				width: 85%;
+
+				:global(> .markdown > *) {
+					&:first-child {
+						margin-top: 0px;
+					}
+
+					&:last-child {
+						margin-bottom: 0px;
+					}
+				}
 			}
 
 			&.error {
