@@ -1,17 +1,26 @@
 <script lang="ts">
 	import { AccountSchema, ChatSchema } from '$lib/state/db.svelte';
+	import { ChatSettings } from '$lib/state/settings.svelte';
 	import { AccountCoState } from 'jazz-tools/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Input from '../Input.svelte';
-	import { toast } from '@ghostsui/svelte/toasts';
 
 	const account = new AccountCoState(AccountSchema, {
 		resolve: { root: { chats: { $each: true } } },
 	});
 
+	const settings = new ChatSettings();
+
 	let modelId = $state<string | null>(null);
 	let providerId = $state<string | null>(null);
+
+	$effect(() => {
+		if (!settings.loading && !modelId && !providerId) {
+			modelId = settings.defaultModelId;
+			providerId = settings.defaultProviderId;
+		}
+	});
 
 	async function onSubmit(text: string) {
 		if (!account.current.$isLoaded || !account.current.root.$isLoaded) {

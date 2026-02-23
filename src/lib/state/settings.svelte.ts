@@ -66,3 +66,44 @@ export class NameGenSettings {
 		this.#state.current.root.nameGenSettings.$jazz.set('prompt', prompt);
 	}
 }
+
+export class ChatSettings {
+	#state = new AccountCoState(AccountSchema, {
+		resolve: { root: { chatSettings: true } },
+	});
+
+	get loading() {
+		return !this.#state.current.$isLoaded;
+	}
+
+	set defaultProviderId(id: string | null) {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('chat is not loaded');
+		}
+
+		this.#state.current.root.chatSettings.$jazz.set(
+			'defaultProviderId',
+			id,
+		);
+	}
+
+	get defaultProviderId(): string | null {
+		return this.#state.current.$isLoaded
+			? this.#state.current.root.chatSettings.defaultProviderId
+			: null;
+	}
+
+	set defaultModelId(id: string | null) {
+		if (!this.#state.current.$isLoaded) {
+			throw new Error('chat is not loaded');
+		}
+
+		this.#state.current.root.chatSettings.$jazz.set('defaultModelId', id);
+	}
+
+	get defaultModelId(): string | null {
+		return this.#state.current.$isLoaded
+			? this.#state.current.root.chatSettings.defaultModelId
+			: null;
+	}
+}

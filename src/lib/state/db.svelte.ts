@@ -33,11 +33,17 @@ export const NameGenSettingsSchema = co.map({
 	prompt: z.string().min(1),
 });
 
+export const ChatSettingsSchema = co.map({
+	defaultProviderId: z.string().min(1).nullable(),
+	defaultModelId: z.string().min(1).nullable(),
+});
+
 export const AccountRootSchema = co
 	.map({
 		providers: co.list(ProviderSchema),
 		chats: co.list(ChatSchema),
 		nameGenSettings: NameGenSettingsSchema,
+		chatSettings: ChatSettingsSchema,
 	})
 	.withMigration((root) => {
 		if (!root.$jazz.has('chats')) {
@@ -50,6 +56,13 @@ export const AccountRootSchema = co
 				providerId: null,
 				modelId: null,
 				prompt: '',
+			});
+		}
+
+		if (!root.$jazz.has('chatSettings')) {
+			root.$jazz.set('chatSettings', {
+				defaultProviderId: null,
+				defaultModelId: null,
 			});
 		}
 	});
@@ -69,6 +82,10 @@ export const AccountSchema = co
 					providerId: null,
 					modelId: null,
 					prompt: '',
+				},
+				chatSettings: {
+					defaultProviderId: null,
+					defaultModelId: null,
 				},
 			});
 		}

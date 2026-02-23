@@ -2,10 +2,12 @@
 	import Providers from './Providers.svelte';
 	import NameGen from './NameGen.svelte';
 	import Sync from './Sync.svelte';
+	import Chat from './Chat.svelte';
 </script>
 
 <h1>Settings</h1>
 
 <Providers />
 <NameGen />
+<Chat />
 <Sync />
