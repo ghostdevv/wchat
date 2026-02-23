@@ -3,12 +3,22 @@
 	import IconSettings from '~icons/lucide/settings';
 	import IconSparkles from '~icons/lucide/sparkles';
 	import { Modal } from '@ghostsui/svelte/modal';
+	import { toast } from '@ghostsui/svelte/toasts';
 
 	interface Props {
 		chat: Chat;
 	}
 
 	const { chat }: Props = $props();
+
+	async function generate() {
+		try {
+			await chat.generateName();
+		} catch (error) {
+			const message = error instanceof Error ? error.message : `${error}`;
+			toast('error', `failed to generate name: ${message}`);
+		}
+	}
 </script>
 
 <Modal>
@@ -29,11 +39,7 @@
 			disabled={chat.name === null}
 		/>
 
-		<button
-			class="icon"
-			onclick={() => chat.generateName()}
-			disabled={chat.generatingName}
-		>
+		<button class="icon" onclick={generate} disabled={chat.generatingName}>
 			<IconSparkles />
 		</button>
 	</div>

@@ -36,8 +36,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0(eslint@9.39.2)(oxlint@1.49.0)
       '@ghostsui/svelte':
-        specifier: 1.0.0-beta.1
-        version: 1.0.0-beta.1(@floating-ui/dom@1.7.5)(ghostsui@2.0.0-beta.8)(svelte@5.53.2)
+        specifier: 1.0.0-beta.2
+        version: 1.0.0-beta.2(@floating-ui/dom@1.7.5)(ghostsui@2.0.0-beta.8)(svelte@5.53.2)
       '@iconify-json/lucide':
         specifier: ^1.2.93
         version: 1.2.93
@@ -593,8 +593,8 @@ packages:
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
-  '@ghostsui/svelte@1.0.0-beta.1':
-    resolution: {integrity: sha512-K35Xe5sfXS7gjdIum0kjXGeQHvjFsLHyNBTN9fBiFkRYnC6CvPP0wEC8xdD0kV7GgqiTn3+DgnCcoMH9A18zqw==}
+  '@ghostsui/svelte@1.0.0-beta.2':
+    resolution: {integrity: sha512-GvnWYYZt8EWitjrPjZYd/ij2JiEzYCuePDdnhFDhVEvNIU2l5Gi/46NB44+FbLOvH1jTeJAyjkF/7cFqGJjdAg==}
     peerDependencies:
       ghostsui: ^2.0.0-beta.8
       svelte: ^5.0.0
@@ -3560,7 +3560,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@ghostsui/svelte@1.0.0-beta.1(@floating-ui/dom@1.7.5)(ghostsui@2.0.0-beta.8)(svelte@5.53.2)':
+  '@ghostsui/svelte@1.0.0-beta.2(@floating-ui/dom@1.7.5)(ghostsui@2.0.0-beta.8)(svelte@5.53.2)':
     dependencies:
       ghostsui: 2.0.0-beta.8
       melt: 0.44.0(@floating-ui/dom@1.7.5)(svelte@5.53.2)

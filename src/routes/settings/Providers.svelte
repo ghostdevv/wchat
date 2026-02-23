@@ -2,6 +2,7 @@
 	import { Provider, Providers } from '$lib/state/providers.svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
 	import IconRefresh from '~icons/lucide/refresh-cw';
+	import { toast } from '@ghostsui/svelte/toasts';
 	import { Modal } from '@ghostsui/svelte/modal';
 	import IconTrash from '~icons/lucide/trash-2';
 	import IconPlus from '~icons/lucide/plus';
@@ -38,6 +39,7 @@
 	function handleDelete(id: string) {
 		if (confirm(`Are you sure you want to delete "${name}"?`)) {
 			providers.delete(id);
+			toast('success', 'provider deleted successfully');
 		}
 	}
 
@@ -45,14 +47,39 @@
 		event.preventDefault();
 		saving = true;
 
-		if (editing) {
-			editing.update(name, baseURL, apiKey);
-		} else {
-			await providers.create(name, baseURL, apiKey);
+		try {
+			if (editing) {
+				editing.update(name, baseURL, apiKey);
+			} else {
+				await providers.create(name, baseURL, apiKey);
+			}
+
+			toast(
+				'success',
+				`provider ${editing ? 'edited' : 'created'} successfully`,
+			);
+
+			open = false;
+		} catch (error) {
+			const message = error instanceof Error ? error.message : `${error}`;
+
+			toast(
+				'error',
+				`failed to ${editing ? 'edit' : 'create'} provider: ${message}`,
+			);
 		}
 
-		open = false;
 		saving = false;
+	}
+
+	async function refreshModels(provider: Provider) {
+		try {
+			await provider.refreshModels();
+			toast('success', 'models refreshed successfully');
+		} catch (error) {
+			const message = error instanceof Error ? error.message : `${error}`;
+			toast('error', `failed to refresh models: ${message}`);
+		}
 	}
 </script>
 
@@ -160,7 +187,7 @@
 
 						<button
 							class="icon"
-							onclick={() => provider.refreshModels()}
+							onclick={() => refreshModels(provider)}
 							title="Refresh Models"
 							disabled={providerDisabled}
 						>

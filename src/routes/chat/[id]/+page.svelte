@@ -4,10 +4,21 @@
 	import Settings from './Settings.svelte';
 	import { navigating } from '$app/state';
 	import Input from '../Input.svelte';
+	import { toast } from '@ghostsui/svelte/toasts';
 
 	const { params } = $props();
 	const providers = new Providers();
 	const chat = $derived(new Chat(params.id, providers));
+
+	async function handleNewChat(messageId: string) {
+		try {
+			await chat.regenerate({ messageId });
+			await chat.generateName();
+		} catch (error) {
+			const message = error instanceof Error ? error.message : `${error}`;
+			toast('error', `failed to handle new chat: ${message}`);
+		}
+	}
 
 	const newChat = navigating.from?.route.id === '/chat/new';
 	$effect(() => {
@@ -15,9 +26,7 @@
 			const lastMessage = chat.lastMessage;
 
 			if (lastMessage?.role === 'user') {
-				chat.regenerate({ messageId: lastMessage.id }).then(() =>
-					chat.generateName(),
-				);
+				handleNewChat(lastMessage.id);
 			}
 		}
 	});
@@ -45,10 +54,7 @@
 	disabled={chat.loading}
 	bind:modelId={chat.modelId}
 	bind:providerId={chat.providerId}
-	onSubmit={async (text) => {
-		await chat.sendMessage({ text });
-		return true;
-	}}
+	onSubmit={async (text) => await chat.sendMessage({ text })}
 >
 	<Settings {chat} />
 </Input>

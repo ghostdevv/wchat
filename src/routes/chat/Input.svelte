@@ -2,13 +2,14 @@
 	import Editor from '$lib/chat/editor/Editor.svelte';
 	import ModelSelect from '$lib/ModelSelect.svelte';
 	import IconArrowUp from '~icons/lucide/arrow-up';
+	import { toast } from '@ghostsui/svelte/toasts';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
 		modelId: string | null;
 		providerId: string | null;
 		children?: Snippet;
-		onSubmit: (text: string) => Promise<boolean>;
+		onSubmit: (text: string) => Promise<void>;
 		disabled?: boolean;
 	}
 
@@ -25,8 +26,15 @@
 	async function onSubmit() {
 		if (!input.trim()) return;
 		submitting = true;
-		const success = await props.onSubmit(input.trim());
-		if (success) input = '';
+
+		try {
+			await props.onSubmit(input.trim());
+			input = '';
+		} catch (error) {
+			const message = error instanceof Error ? error.message : `${error}`;
+			toast('error', `failed to send message: ${message}`);
+		}
+
 		submitting = false;
 	}
 

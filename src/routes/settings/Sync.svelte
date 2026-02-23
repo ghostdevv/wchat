@@ -2,6 +2,7 @@
 	import { getJazzContext, usePassphraseAuth } from 'jazz-tools/svelte';
 	import { sync, type Peer } from '$lib/state/db.svelte';
 	import PasswordInput from '$lib/PasswordInput.svelte';
+	import { toast } from '@ghostsui/svelte/toasts';
 	import { wordlist } from './wordlist';
 
 	const auth = usePassphraseAuth({ wordlist });
@@ -20,7 +21,8 @@
 
 		if (!peer.startsWith('wss://') && !peer.startsWith('ws://')) {
 			disabled = false;
-			throw new Error('Invalid peer URL');
+			toast('error', 'Invalid peer URL');
+			return;
 		}
 
 		sync.peer = peer as Peer;
@@ -32,7 +34,8 @@
 				await auth.logIn(passphrase);
 			}
 		} catch (error) {
-			console.error(error);
+			const message = error instanceof Error ? error.message : `${error}`;
+			toast('error', `failed to signup/login: ${message}`);
 		}
 
 		disabled = false;

@@ -4,7 +4,9 @@
 	import { AccountSchema, sync } from '$lib/state/db.svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import { JazzSvelteProvider } from 'jazz-tools/svelte';
+	import { Toasts } from '@ghostsui/svelte/toasts';
 	import favicon from '$lib/assets/favicon.svg';
+	import IconClose from '~icons/lucide/x';
 	import Sidebar from './Sidebar.svelte';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
@@ -42,6 +44,8 @@
 </svelte:head>
 
 <svelte:window bind:innerWidth />
+
+<Toasts closeIcon={IconClose} />
 
 <div class="wrapper">
 	<JazzSvelteProvider {AccountSchema} sync={sync.config}>

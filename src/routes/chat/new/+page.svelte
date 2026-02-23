@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Input from '../Input.svelte';
+	import { toast } from '@ghostsui/svelte/toasts';
 
 	const account = new AccountCoState(AccountSchema, {
 		resolve: { root: { chats: { $each: true } } },
@@ -14,8 +15,7 @@
 
 	async function onSubmit(text: string) {
 		if (!account.current.$isLoaded || !account.current.root.$isLoaded) {
-			console.log('account not loaded');
-			return false;
+			throw new Error('account not loaded');
 		}
 
 		const chat = ChatSchema.create({
@@ -32,8 +32,6 @@
 
 		account.current.root.chats.$jazz.push(chat);
 		await goto(`${resolve('/chat/[id]', { id: chat.$jazz.id })}?new`);
-
-		return true;
 	}
 </script>
 
