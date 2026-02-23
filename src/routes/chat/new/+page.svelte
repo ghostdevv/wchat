@@ -57,6 +57,8 @@
 	div {
 		display: grid;
 		place-items: center;
+		height: 100%;
+		overflow-y: auto;
 
 		img {
 			border-radius: 12px;
