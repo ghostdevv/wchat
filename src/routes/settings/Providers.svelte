@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { Provider, Providers } from '$lib/state/providers.svelte';
-	import PasswordInput from '$lib/PasswordInput.svelte';
+	import { PasswordInput } from '@ghostsui/svelte/password';
 	import IconRefresh from '~icons/lucide/refresh-cw';
 	import { toast } from '@ghostsui/svelte/toasts';
+	import IconEyeOff from '~icons/lucide/eye-off';
 	import { Modal } from '@ghostsui/svelte/modal';
 	import IconTrash from '~icons/lucide/trash-2';
 	import IconPlus from '~icons/lucide/plus';
 	import IconEdit from '~icons/lucide/edit';
+	import IconEye from '~icons/lucide/eye';
 
 	const providers = new Providers();
 
@@ -119,17 +121,16 @@
 					/>
 				</label>
 
-				<label>
-					API Key
-					<PasswordInput
-						bind:value={apiKey}
-						{disabled}
-						required={false}
-						placeholder={editing
-							? 'Leave empty to keep existing'
-							: 'Optional'}
-					/>
-				</label>
+				<PasswordInput
+					{disabled}
+					iconOn={IconEye}
+					iconOff={IconEyeOff}
+					bind:value={apiKey}
+					label="API Key"
+					placeholder={editing
+						? 'Leave empty to keep existing'
+						: 'Optional'}
+				/>
 
 				<div class="actions">
 					<button

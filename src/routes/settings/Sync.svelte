@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { getJazzContext, usePassphraseAuth } from 'jazz-tools/svelte';
+	import { PasswordInput } from '@ghostsui/svelte/password';
 	import { sync, type Peer } from '$lib/state/db.svelte';
-	import PasswordInput from '$lib/PasswordInput.svelte';
 	import { toast } from '@ghostsui/svelte/toasts';
+	import IconEyeOff from '~icons/lucide/eye-off';
+	import IconEye from '~icons/lucide/eye';
 	import { wordlist } from './wordlist';
 
 	const auth = usePassphraseAuth({ wordlist });
@@ -87,15 +89,15 @@
 				/>
 			</label>
 
-			<label>
-				<span>Passphrase</span>
-
-				<PasswordInput
-					name="passphrase"
-					value={auth.passphrase}
-					{disabled}
-				/>
-			</label>
+			<PasswordInput
+				{disabled}
+				iconOn={IconEye}
+				iconOff={IconEyeOff}
+				value={auth.passphrase}
+				label="Passphrase"
+				name="passphrase"
+				required
+			/>
 
 			<button class="outline" {disabled}> Save </button>
 		</form>
