@@ -34,7 +34,7 @@
 		"ai": "^6.0.97",
 		"dequal": "^2.0.3",
 		"dompurify": "^3.3.1",
-		"ghostsui": "2.0.0-beta.8",
+		"ghostsui": "2.0.0-beta.9",
 		"jazz-tools": "^0.20.10",
 		"marked": "^17.0.3",
 		"marked-alert": "^2.1.2",
