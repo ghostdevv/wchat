@@ -69,7 +69,7 @@
 		display: flex;
 		flex-direction: column;
 		border-top: 2px solid var(--background-secondary);
-		padding: 6px;
+		padding: 8px 10px;
 
 		.controls {
 			display: flex;

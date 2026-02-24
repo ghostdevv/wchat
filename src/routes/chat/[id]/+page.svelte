@@ -64,6 +64,7 @@
 	ul {
 		list-style: none;
 		overflow-y: auto;
+		padding: 4px 10px;
 
 		> li {
 			display: block;

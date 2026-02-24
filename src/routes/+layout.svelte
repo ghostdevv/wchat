@@ -22,7 +22,7 @@
 	let innerWidth = $state(0);
 
 	const panelMin = $derived(Math.ceil((200 / innerWidth) * 100));
-	const isChatPage = $derived(page.url.pathname === '/');
+	const isChatPage = $derived(page.route.id?.startsWith('/chat'));
 
 	const title = $derived.by(() => {
 		switch (page.route.id) {
@@ -104,8 +104,8 @@
 			margin-top: 0px;
 		}
 
-		&:not(&.chat) {
-			padding: 6px 8px;
+		&.chat {
+			padding: 0px;
 		}
 	}
 
