@@ -11,7 +11,10 @@ export interface Model {
 	name: string;
 }
 
-async function fetchModels(baseURL: string, apiKey?: string | null) {
+async function fetchModels(
+	baseURL: string,
+	apiKey?: string | null,
+): Promise<Model[]> {
 	const url = new URL(baseURL);
 	url.pathname += '/models';
 
@@ -19,9 +22,9 @@ async function fetchModels(baseURL: string, apiKey?: string | null) {
 	if (apiKey) headers.set('Authorization', `Bearer ${apiKey}`);
 
 	const result = await fetch(url, { headers });
-	const json: { data: Model[] } = await result.json();
+	const json: { data: { id: string; name?: string }[] } = await result.json();
 
-	return json.data;
+	return json.data.map((m) => ({ id: m.id, name: m.name ?? m.id }));
 }
 
 export class Provider {
