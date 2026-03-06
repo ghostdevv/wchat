@@ -34,7 +34,7 @@
 </script>
 
 <ul>
-	{#each chat.messages as message (message.id)}
+	{#each chat.messages.toReversed() as message (message.id)}
 		<li class:user={message.role === 'user'}>
 			{#each message.parts as part, partIndex (partIndex)}
 				{#if part.type === 'text'}
@@ -65,6 +65,9 @@
 		list-style: none;
 		overflow-y: auto;
 		padding: 4px 10px;
+
+		display: flex;
+		flex-direction: column-reverse;
 
 		> li {
 			display: block;
