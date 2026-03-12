@@ -87,7 +87,7 @@
 
 <section>
 	<div class="title">
-		<h2>Providers {open}</h2>
+		<h2>Providers</h2>
 
 		<Modal bind:open {onClose}>
 			{#snippet activator(attrs)}
