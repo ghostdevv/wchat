@@ -1,6 +1,9 @@
 import { execSync } from 'node:child_process';
 import adapter from '@sveltejs/adapter-node';
 
+const sha =
+	process.env.GIT_HASH || execSync('git rev-parse HEAD').toString().trim();
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
@@ -10,9 +13,7 @@ const config = {
 		adapter: adapter({}),
 
 		version: {
-			name:
-				process.env.GIT_HASH ||
-				execSync('git rev-parse HEAD').toString().trim().slice(0, 7),
+			name: sha.slice(0, 7),
 		},
 
 		paths: {
