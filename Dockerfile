@@ -1,11 +1,13 @@
 FROM ghcr.io/ghostdevv/node:24-alpine AS build
 
+ARG GIT_HASH
+
 WORKDIR /app
 
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm build
+RUN GIT_HASH=$GIT_HASH pnpm build
 
 FROM ghcr.io/ghostdevv/node:24-alpine
 

@@ -35,3 +35,4 @@ jobs:
               with:
                   push: true
                   tags: ghcr.io/ghostdevv/wchat:latest
+                  build-args: GIT_HASH=${{ github.sha }}

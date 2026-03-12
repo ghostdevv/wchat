@@ -10,7 +10,9 @@ const config = {
 		adapter: adapter({}),
 
 		version: {
-			name: execSync('git rev-parse HEAD').toString().trim().slice(0, 7),
+			name:
+				process.env.GIT_HASH ||
+				execSync('git rev-parse HEAD').toString().trim().slice(0, 7),
 		},
 
 		paths: {
