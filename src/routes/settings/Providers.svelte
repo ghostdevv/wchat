@@ -219,6 +219,10 @@
 		justify-content: space-between;
 	}
 
+	section {
+		margin-top: 8px;
+	}
+
 	.providers {
 		list-style: none;
 
