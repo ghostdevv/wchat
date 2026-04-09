@@ -20,6 +20,12 @@ const config = {
 			base: '/wchat',
 		},
 	},
+
+	compilerOptions: {
+		experimental: {
+			async: true,
+		},
+	},
 };
 
 export default config;

@@ -1,109 +1,98 @@
-import { AccountCoState } from 'jazz-tools/svelte';
-import { AccountSchema } from './db.svelte';
+import type { Database } from './db.svelte';
+
+export interface SettingsData {
+	nameGen: {
+		enabled: boolean;
+		providerId: string | null;
+		modelId: string | null;
+		prompt: string;
+	};
+	chat: {
+		defaultProviderId: string | null;
+		defaultModelId: string | null;
+	};
+}
 
 export class NameGenSettings {
-	#state = new AccountCoState(AccountSchema, {
-		resolve: { root: { nameGenSettings: true } },
-	});
-
-	get loading() {
-		return !this.#state.current.$isLoaded;
-	}
+	constructor(private readonly db: Database) {}
 
 	get enabled(): boolean {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.enabled
-			: false;
+		return this.db.current.settings.nameGen.enabled;
 	}
 
-	set enabled(enabled: boolean) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('enabled', enabled);
-	}
-
-	set providerId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('providerId', id);
+	set enabled(value: boolean) {
+		this.db.change((d) => {
+			d.settings.nameGen.enabled = value;
+		});
 	}
 
 	get providerId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.providerId
-			: null;
+		return this.db.current.settings.nameGen.providerId;
 	}
 
-	set modelId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('modelId', id);
+	set providerId(value: string | null) {
+		this.db.change((d) => {
+			d.settings.nameGen.providerId = value;
+		});
 	}
 
 	get modelId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.modelId
-			: null;
+		return this.db.current.settings.nameGen.modelId;
+	}
+
+	set modelId(value: string | null) {
+		this.db.change((d) => {
+			d.settings.nameGen.modelId = value;
+		});
 	}
 
 	get prompt(): string {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.prompt
-			: '';
+		return this.db.current.settings.nameGen.prompt;
 	}
 
-	set prompt(prompt: string) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('prompt', prompt);
+	set prompt(value: string) {
+		this.db.change((d) => {
+			d.settings.nameGen.prompt = value;
+		});
 	}
 }
 
 export class ChatSettings {
-	#state = new AccountCoState(AccountSchema, {
-		resolve: { root: { chatSettings: true } },
-	});
-
-	get loading() {
-		return !this.#state.current.$isLoaded;
-	}
-
-	set defaultProviderId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.chatSettings.$jazz.set(
-			'defaultProviderId',
-			id,
-		);
-	}
+	constructor(private readonly db: Database) {}
 
 	get defaultProviderId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.chatSettings.defaultProviderId
-			: null;
+		return this.db.current.settings.chat.defaultProviderId;
 	}
 
-	set defaultModelId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.chatSettings.$jazz.set('defaultModelId', id);
+	set defaultProviderId(value: string | null) {
+		this.db.change((d) => {
+			d.settings.chat.defaultProviderId = value;
+		});
 	}
 
 	get defaultModelId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.chatSettings.defaultModelId
-			: null;
+		return this.db.current.settings.chat.defaultModelId;
+	}
+
+	set defaultModelId(value: string | null) {
+		this.db.change((d) => {
+			d.settings.chat.defaultModelId = value;
+		});
+	}
+}
+
+export class Settings {
+	constructor(private readonly db: Database) {}
+
+	#chat: ChatSettings | null = null;
+	get chat() {
+		this.#chat ??= new ChatSettings(this.db);
+		return this.#chat;
+	}
+
+	#nameGen: NameGenSettings | null = null;
+	get nameGen() {
+		this.#nameGen ??= new NameGenSettings(this.db);
+		return this.#nameGen;
 	}
 }

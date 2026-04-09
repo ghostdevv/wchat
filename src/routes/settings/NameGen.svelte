@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { NameGenSettings } from '$lib/state/settings.svelte';
 	import ModelSelect from '$lib/ModelSelect.svelte';
+	import { dbm } from '$lib/state/db.svelte';
 
-	const settings = new NameGenSettings();
+	const db = $derived(await dbm.db());
 </script>
 
 <section>
@@ -12,18 +12,16 @@
 		<input
 			type="checkbox"
 			role="switch"
-			disabled={settings.loading}
-			bind:checked={settings.enabled}
+			bind:checked={db.settings.nameGen.enabled}
 		/>
 	</div>
 
-	{#if settings.enabled}
+	{#if db.settings.nameGen.enabled}
 		<label class="model">
 			Model
 			<ModelSelect
-				bind:modelId={settings.modelId}
-				bind:providerId={settings.providerId}
-				disabled={settings.loading}
+				bind:modelId={db.settings.nameGen.modelId}
+				bind:providerId={db.settings.nameGen.providerId}
 			/>
 		</label>
 
@@ -31,8 +29,7 @@
 			Prompt
 			<textarea
 				placeholder="Make no mistakes"
-				disabled={settings.loading}
-				bind:value={settings.prompt}
+				bind:value={db.settings.nameGen.prompt}
 			></textarea>
 		</label>
 	{/if}

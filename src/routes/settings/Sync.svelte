@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { getJazzContext, usePassphraseAuth } from 'jazz-tools/svelte';
+	import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 	import { PasswordInput } from '@ghostsui/svelte/password';
-	import { sync, type Peer } from '$lib/state/db.svelte';
 	import { toast } from '@ghostsui/svelte/toasts';
 	import IconEyeOff from '~icons/lucide/eye-off';
+	import { dbm } from '$lib/state/db.svelte';
 	import IconEye from '~icons/lucide/eye';
-	import { wordlist } from './wordlist';
-
-	const auth = usePassphraseAuth({ wordlist });
 
 	let disabled = $state(false);
 
@@ -18,117 +15,58 @@
 		disabled = true;
 
 		const formData = new FormData(event.currentTarget);
-		const passphrase = formData.get('passphrase') as string;
-		const peer = formData.get('peer') as string;
+		const url = formData.get('url') as string;
 
-		if (!peer.startsWith('wss://') && !peer.startsWith('ws://')) {
+		if (!isValidAutomergeUrl(url)) {
+			toast('error', 'url is not a valid automerge url');
 			disabled = false;
-			toast('error', 'Invalid peer URL');
 			return;
 		}
 
-		sync.peer = peer as Peer;
-
-		try {
-			if (passphrase == auth.passphrase && auth.state === 'anonymous') {
-				await auth.signUp();
-			} else {
-				await auth.logIn(passphrase);
-			}
-		} catch (error) {
-			const message = error instanceof Error ? error.message : `${error}`;
-			toast('error', `failed to signup/login: ${message}`);
-		}
-
+		dbm.url = url;
 		disabled = false;
+		toast('success', 'updated database url!');
 	}
-
-	const jazz = getJazzContext();
-	let connected = $state(jazz.current.connected());
-
-	const authState = $derived(
-		auth.state === 'signedIn' && connected ? 'connected' : 'disconnected',
-	);
-
-	$effect(() => {
-		return jazz.current.addConnectionListener((c) => {
-			connected = c;
-		});
-	});
 </script>
 
 <section>
-	<div class="title">
-		<h2>Sync</h2>
+	<h2>Database</h2>
 
-		<input
-			type="checkbox"
-			role="switch"
+	<form {onsubmit}>
+		<PasswordInput
 			{disabled}
-			bind:checked={sync.enabled}
+			iconOn={IconEye}
+			iconOff={IconEyeOff}
+			value={dbm.url}
+			label="Automerge URL"
+			name="url"
+			required
 		/>
-	</div>
 
-	{#if sync.enabled}
-		<div class="state">
-			<div class={['indicator', authState]}></div>
-			<p>{authState}</p>
-		</div>
-
-		<form {onsubmit}>
-			<label>
-				<span>Peer:</span>
-
-				<input
-					type="url"
-					name="peer"
-					placeholder="wss://example.com"
-					value={sync.peer}
-					required
-					{disabled}
-				/>
-			</label>
-
-			<PasswordInput
-				{disabled}
-				iconOn={IconEye}
-				iconOff={IconEyeOff}
-				value={auth.passphrase}
-				label="Passphrase"
-				name="passphrase"
-				required
-			/>
-
-			<button class="outline" {disabled}> Save </button>
-		</form>
-	{/if}
+		<button class="outline" {disabled}> Save </button>
+	</form>
 </section>
 
 <style>
-	.title {
-		display: flex;
+	form {
+		display: grid;
+		grid-template-rows: repeat(2, max-content);
+		grid-template-columns: 1fr max-content;
 		align-items: center;
-		justify-content: space-between;
-	}
+		gap: 6px 0px;
 
-	.state {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		text-transform: capitalize;
+		button {
+			grid-row: 2;
+			grid-column: 2;
+		}
 
-		.indicator {
-			width: 10px;
-			height: 10px;
-			border-radius: 100%;
+		:global(label) {
+			grid-row: 1;
+			grid-column: 1 / span 2;
+		}
 
-			&.connected {
-				background-color: var(--green);
-			}
-
-			&.disconnected {
-				background-color: var(--red);
-			}
+		:global(.password-input) {
+			margin-top: 0px;
 		}
 	}
 </style>

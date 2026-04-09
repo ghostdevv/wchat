@@ -13,8 +13,13 @@
 		"lint": "prettier --check . && oxlint",
 		"fix": "prettier --write . && oxlint --fix"
 	},
+	"packageManager": "pnpm@10.33.4",
 	"devDependencies": {
 		"@ai-sdk/openai": "^3.0.41",
+		"@automerge/automerge": "^3.2.6",
+		"@automerge/automerge-repo": "^2.5.5",
+		"@automerge/automerge-repo-network-broadcastchannel": "^2.5.5",
+		"@automerge/automerge-repo-storage-indexeddb": "^2.5.5",
 		"@codemirror/commands": "^6.10.3",
 		"@codemirror/lang-markdown": "^6.5.0",
 		"@codemirror/language": "^6.12.2",
@@ -34,8 +39,11 @@
 		"ai": "^6.0.116",
 		"dequal": "^2.0.3",
 		"dompurify": "^3.3.3",
+		"dset": "^3.1.4",
 		"ghostsui": "2.0.0-beta.9",
-		"jazz-tools": "^0.20.12",
+		"just-deep-map-values": "^1.2.0",
+		"just-diff": "^6.0.2",
+		"just-merge": "^3.2.0",
 		"marked": "^17.0.4",
 		"marked-alert": "^2.1.2",
 		"marked-shiki": "^1.2.1",
@@ -51,6 +59,6 @@
 		"typescript": "^5.9.3",
 		"unplugin-icons": "^23.0.1",
 		"vite": "^8.0.0",
-		"zod": "^4.3.6"
+		"vite-plugin-wasm": "^3.6.0"
 	}
 }

@@ -1,9 +1,7 @@
 <script lang="ts">
 	import 'ghostsui';
 	import IconGripVertical from '~icons/lucide/grip-vertical';
-	import { AccountSchema, sync } from '$lib/state/db.svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
-	import { JazzSvelteProvider } from 'jazz-tools/svelte';
 	import { Toasts } from '@ghostsui/svelte/toasts';
 	import favicon from '$lib/assets/favicon.svg';
 	import IconClose from '~icons/lucide/x';
@@ -48,38 +46,44 @@
 <Toasts closeIcon={IconClose} />
 
 <div class="wrapper">
-	<JazzSvelteProvider {AccountSchema} sync={sync.config}>
-		<PaneGroup direction="horizontal">
-			<Pane
-				defaultSize={panelMin}
-				minSize={panelMin}
-				onCollapse={() => (collapsed = true)}
-				onExpand={() => (collapsed = false)}
-				collapsible
-			>
-				<Sidebar />
-			</Pane>
+	<PaneGroup direction="horizontal">
+		<Pane
+			defaultSize={panelMin}
+			minSize={panelMin}
+			onCollapse={() => (collapsed = true)}
+			onExpand={() => (collapsed = false)}
+			collapsible
+		>
+			<Sidebar />
+		</Pane>
 
-			<PaneResizer
-				class="resizer"
-				onDraggingChange={(v) => (isDragging = v)}
-			>
-				<div
-					class="resizer-grip"
-					class:active={isDragging}
-					class:collapsed
-				>
-					<IconGripVertical />
-				</div>
-			</PaneResizer>
+		<PaneResizer class="resizer" onDraggingChange={(v) => (isDragging = v)}>
+			<div class="resizer-grip" class:active={isDragging} class:collapsed>
+				<IconGripVertical />
+			</div>
+		</PaneResizer>
 
-			<Pane minSize={33}>
-				<main class:chat={isChatPage}>
+		<Pane minSize={33}>
+			<main class:chat={isChatPage}>
+				<svelte:boundary>
 					{@render children()}
-				</main>
-			</Pane>
-		</PaneGroup>
-	</JazzSvelteProvider>
+					{#snippet pending()}
+						<div class="loading-overlay">Loading...</div>
+					{/snippet}
+					{#snippet failed(error, reset)}
+						<div class="error-overlay">
+							<p>
+								Something went wrong: {error instanceof Error
+									? error.message
+									: error}
+							</p>
+							<button onclick={reset}>Try again</button>
+						</div>
+					{/snippet}
+				</svelte:boundary>
+			</main>
+		</Pane>
+	</PaneGroup>
 </div>
 
 <style>
@@ -146,6 +150,26 @@
 		&:active,
 		&.active {
 			background-color: var(--primary);
+		}
+	}
+
+	.loading-overlay {
+		display: grid;
+		place-items: center;
+		height: 100%;
+		color: var(--text-secondary);
+		padding: 20px;
+	}
+
+	.error-overlay {
+		display: grid;
+		place-items: center;
+		height: 100%;
+		padding: 20px;
+		text-align: center;
+
+		p {
+			color: var(--red);
 		}
 	}
 </style>

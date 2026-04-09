@@ -33,6 +33,7 @@
 		} catch (error) {
 			const message = error instanceof Error ? error.message : `${error}`;
 			toast('error', `failed to send message: ${message}`);
+			console.error('failed to send message', error);
 		}
 
 		submitting = false;

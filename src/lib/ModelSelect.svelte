@@ -7,31 +7,37 @@
 </script>
 
 <script lang="ts">
-	import { Providers, type Model } from '$lib/state/providers.svelte';
 	import IconChevronDown from '~icons/lucide/chevron-down';
+	import type { Model } from './state/providers.svelte';
 	import IconCheck from '~icons/lucide/check';
+	import { dbm } from './state/db.svelte';
 	import { Select } from 'melt/builders';
 
+	const db = $derived(await dbm.db());
+
 	interface Props {
-		disabled: boolean;
+		disabled?: boolean;
 		modelId: string | null;
 		providerId: string | null;
+		onChange?: (opts: {
+			modelId: string | null;
+			providerId: string | null;
+		}) => void;
 	}
 
 	let {
-		disabled,
+		disabled = false,
 		modelId = $bindable(),
 		providerId = $bindable(),
+		onChange,
 	}: Props = $props();
 
-	const providers = new Providers();
-
 	const options = $derived(
-		providers.current.flatMap((provider) =>
-			provider.current!.models.map(
+		db.providers.current.flatMap((provider) =>
+			provider.models.map(
 				(model): Option => ({
 					providerId: provider.id,
-					providerName: provider.current!.name,
+					providerName: provider.name,
 					model,
 				}),
 			),
@@ -55,6 +61,7 @@
 		onValueChange(value) {
 			modelId = value?.model.id ?? null;
 			providerId = value?.providerId ?? null;
+			onChange?.({ modelId, providerId });
 		},
 	});
 </script>
