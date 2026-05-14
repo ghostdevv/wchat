@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { ChatSettings } from '$lib/state/settings.svelte';
 	import ModelSelect from '$lib/ModelSelect.svelte';
+	import { dbm } from '$lib/state/db.svelte';
 
-	const settings = new ChatSettings();
+	const db = $derived(await dbm.db());
 </script>
 
 <section>
@@ -11,9 +11,8 @@
 	<label class="model">
 		Default Model
 		<ModelSelect
-			bind:modelId={settings.defaultModelId}
-			bind:providerId={settings.defaultProviderId}
-			disabled={settings.loading}
+			bind:modelId={db.settings.chat.defaultModelId}
+			bind:providerId={db.settings.chat.defaultProviderId}
 		/>
 	</label>
 </section>

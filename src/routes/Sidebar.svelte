@@ -1,31 +1,21 @@
 <script lang="ts">
 	import IconMessageCirclePlus from '~icons/lucide/message-circle-plus';
-	import { AccountSchema } from '$lib/state/db.svelte';
-	import { AccountCoState } from 'jazz-tools/svelte';
 	import IconSettings from '~icons/lucide/settings';
+	import { dbm } from '$lib/state/db.svelte';
 	import { resolve } from '$app/paths';
 
-	const account = new AccountCoState(AccountSchema, {
-		resolve: { root: { chats: { $each: true } } },
-	});
+	const db = $derived(await dbm.db());
 
-	const chats = $derived(
-		account.current.$isLoaded
-			? account.current.root.chats
-					.toSorted(
-						(a, b) => b.$jazz.lastUpdatedAt - a.$jazz.lastUpdatedAt,
-					)
-					.map((chat) => ({
-						id: chat.$jazz.id,
-						name: chat.name?.trim() ?? chat.$jazz.id,
-					}))
-			: [],
+	const chatList = $derived(
+		Object.values(db.chats.current)
+			// .toSorted((a, b) => b.$jazz.lastUpdatedAt - a.$jazz.lastUpdatedAt)
+			.map((chat) => ({ ...chat, name: chat.name ?? chat.id })),
 	);
 </script>
 
 <nav class="sidebar">
 	<div class="chats">
-		{#each chats as chat (chat.id)}
+		{#each chatList as chat (chat.id)}
 			<a href={resolve('/chat/[id]', { id: chat.id })} title={chat.name}>
 				{chat.name}
 			</a>

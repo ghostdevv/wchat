@@ -1,30 +1,33 @@
 <script lang="ts">
-	import { Provider, Providers } from '$lib/state/providers.svelte';
+	import type { Provider } from '$lib/state/providers.svelte';
 	import { PasswordInput } from '@ghostsui/svelte/password';
 	import IconRefresh from '~icons/lucide/refresh-cw';
 	import { toast } from '@ghostsui/svelte/toasts';
 	import IconEyeOff from '~icons/lucide/eye-off';
 	import { Modal } from '@ghostsui/svelte/modal';
 	import IconTrash from '~icons/lucide/trash-2';
+	import { dbm } from '$lib/state/db.svelte';
 	import IconPlus from '~icons/lucide/plus';
 	import IconEdit from '~icons/lucide/edit';
 	import IconEye from '~icons/lucide/eye';
 
-	const providers = new Providers();
+	const db = $derived(await dbm.db());
 
 	let editing = $state<Provider | false>(false);
 	let saving = $state(false);
 
+	let id = $state('');
 	let name = $state('');
 	let baseURL = $state('');
 	let apiKey = $state<string | null>(null);
 
-	const disabled = $derived(!providers.ready || saving);
+	const disabled = $derived(saving);
 
 	let open = $state(false);
 
 	function onClose() {
 		editing = false;
+		id = '';
 		name = '';
 		baseURL = '';
 		apiKey = null;
@@ -33,14 +36,15 @@
 	function handleEdit(provider: Provider) {
 		open = true;
 		editing = provider;
-		name = provider.current?.name ?? '';
-		baseURL = provider.current?.baseURL ?? '';
-		apiKey = provider.current?.apiKey ?? null;
+		id = provider.id;
+		name = provider.name;
+		baseURL = provider.baseURL;
+		apiKey = provider.apiKey;
 	}
 
 	function handleDelete(id: string) {
 		if (confirm(`Are you sure you want to delete "${name}"?`)) {
-			providers.delete(id);
+			db.providers.delete(id);
 			toast('success', 'provider deleted successfully');
 		}
 	}
@@ -51,9 +55,9 @@
 
 		try {
 			if (editing) {
-				editing.update(name, baseURL, apiKey);
+				await db.providers.edit(id, name, baseURL, apiKey);
 			} else {
-				await providers.create(name, baseURL, apiKey);
+				await db.providers.create(name, baseURL, apiKey);
 			}
 
 			toast(
@@ -74,9 +78,9 @@
 		saving = false;
 	}
 
-	async function refreshModels(provider: Provider) {
+	async function refreshModels(_provider: Provider) {
 		try {
-			await provider.refreshModels();
+			// await provider.refreshModels();
 			toast('success', 'models refreshed successfully');
 		} catch (error) {
 			const message = error instanceof Error ? error.message : `${error}`;
@@ -151,13 +155,12 @@
 	</div>
 
 	<ul class="providers">
-		{#each providers.current as provider (provider.id)}
-			{@const providerDisabled =
-				!provider.ready || provider.refreshingModels || disabled}
+		{#each db.providers.current as provider (provider.id)}
+			{@const providerDisabled = disabled}
 
 			<li class="provider">
-				<h4 class="name">{provider.current?.name}</h4>
-				<p class="url">{provider.current?.baseURL}</p>
+				<h4 class="name">{provider.name}</h4>
+				<p class="url">{provider.baseURL}</p>
 
 				<div class="actions">
 					<button
@@ -183,7 +186,7 @@
 					<div class="title">
 						<h5>
 							Models <sup class="amount">
-								{provider.current?.models.length ?? 0}
+								{provider.models.length ?? 0}
 							</sup>
 						</h5>
 
@@ -198,7 +201,7 @@
 					</div>
 
 					<ul>
-						{#each provider.current?.models ?? [] as model}
+						{#each provider.models ?? [] as model}
 							<li>{model.name}</li>
 						{:else}
 							<li>No models found</li>

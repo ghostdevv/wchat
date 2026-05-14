@@ -7,15 +7,10 @@
 	}
 
 	const { text }: Props = $props();
-	let rendered = $state('');
-
-	$effect(() => {
-		render(text).then((result) => (rendered = result));
-	});
 </script>
 
 <div class="markdown">
-	{@html rendered}
+	{@html await render(text)}
 </div>
 
 <style>

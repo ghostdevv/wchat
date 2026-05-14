@@ -1,15 +1,16 @@
 <script lang="ts">
 	import Markdown from '$lib/chat/markdown/Markdown.svelte';
-	import { Providers } from '$lib/state/providers.svelte';
 	import { toast } from '@ghostsui/svelte/toasts';
 	import { Chat } from '$lib/state/chats.svelte';
+	import { dbm } from '$lib/state/db.svelte.js';
 	import Settings from './Settings.svelte';
 	import { navigating } from '$app/state';
 	import Input from '../Input.svelte';
 
 	const { params } = $props();
-	const providers = new Providers();
-	const chat = $derived(new Chat(params.id, providers));
+
+	const db = $derived(await dbm.db());
+	const chat = $derived(new Chat(params.id, db));
 
 	async function handleNewChat(messageId: string) {
 		try {
@@ -23,7 +24,7 @@
 
 	const newChat = navigating.from?.route.id === '/chat/new';
 	$effect(() => {
-		if (newChat && !chat.loading && chat.messages.length === 1) {
+		if (newChat && chat.messages.length === 1) {
 			const lastMessage = chat.lastMessage;
 
 			if (lastMessage?.role === 'user') {
@@ -52,7 +53,6 @@
 </ul>
 
 <Input
-	disabled={chat.loading}
 	bind:modelId={chat.modelId}
 	bind:providerId={chat.providerId}
 	onSubmit={async (text) => await chat.sendMessage({ text })}
