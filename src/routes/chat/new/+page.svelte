@@ -1,46 +1,35 @@
 <script lang="ts">
-	import { AccountSchema, ChatSchema } from '$lib/state/db.svelte';
-	import { ChatSettings } from '$lib/state/settings.svelte';
-	import { AccountCoState } from 'jazz-tools/svelte';
+	import { getChatSettings } from '$lib/state/settings.svelte';
+	import { sync } from '$lib/state/db.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Input from '../Input.svelte';
+	import { app } from '$lib/schema';
 
-	const account = new AccountCoState(AccountSchema, {
-		resolve: { root: { chats: { $each: true } } },
-	});
+	const db = $derived(await sync.db());
+	// svelte-ignore state_referenced_locally
+	const settings = await getChatSettings(db);
 
-	const settings = new ChatSettings();
-
-	let modelId = $state<string | null>(null);
-	let providerId = $state<string | null>(null);
-
-	$effect(() => {
-		if (!settings.loading && !modelId && !providerId) {
-			modelId = settings.defaultModelId;
-			providerId = settings.defaultProviderId;
-		}
-	});
+	let modelId = $state(settings.defaultModelId);
+	let providerId = $state(settings.defaultProviderId);
 
 	async function onSubmit(text: string) {
-		if (!account.current.$isLoaded || !account.current.root.$isLoaded) {
-			throw new Error('account not loaded');
-		}
-
-		const chat = ChatSchema.create({
+		const result = db.insert(app.chats, {
+			name: null,
 			providerId,
 			modelId,
 			locked: false,
 			messages: [
 				{
+					id: crypto.randomUUID() as string,
 					role: 'user',
+					metadata: undefined,
 					parts: [{ type: 'text', state: 'done', text }],
 				},
 			],
 		});
 
-		account.current.root.chats.$jazz.push(chat);
-		await goto(`${resolve('/chat/[id]', { id: chat.$jazz.id })}?new`);
+		await goto(`${resolve('/chat/[id]', { id: result.value.id })}?new`);
 	}
 </script>
 

@@ -1,9 +1,8 @@
 <script lang="ts">
-	import Providers from './Providers.svelte';
 	import { version } from '$app/environment';
-	import NameGen from './NameGen.svelte';
+	import Providers from './Providers.svelte';
+	import Settings from './Settings.svelte';
 	import Sync from './Sync.svelte';
-	import Chat from './Chat.svelte';
 </script>
 
 <div class="title">
@@ -12,8 +11,7 @@
 </div>
 
 <Providers />
-<NameGen />
-<Chat />
+<Settings />
 <Sync />
 
 <style>
