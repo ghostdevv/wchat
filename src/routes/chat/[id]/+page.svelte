@@ -1,15 +1,19 @@
 <script lang="ts">
 	import Markdown from '$lib/chat/markdown/Markdown.svelte';
-	import { Providers } from '$lib/state/providers.svelte';
+	import { query, sync } from '$lib/state/db.svelte.js';
 	import { toast } from '@ghostsui/svelte/toasts';
 	import { Chat } from '$lib/state/chats.svelte';
 	import Settings from './Settings.svelte';
 	import { navigating } from '$app/state';
 	import Input from '../Input.svelte';
+	import { app } from '$lib/schema';
+	import { onMount } from 'svelte';
 
 	const { params } = $props();
-	const providers = new Providers();
-	const chat = $derived(new Chat(params.id, providers));
+
+	const db = $derived(await sync.db());
+	const q = $derived(await query(db, app.chats.where({ id: params.id })));
+	const chat = $derived(new Chat(params.id, db, q));
 
 	async function handleNewChat(messageId: string) {
 		try {
@@ -21,9 +25,9 @@
 		}
 	}
 
-	const newChat = navigating.from?.route.id === '/chat/new';
-	$effect(() => {
-		if (newChat && !chat.loading && chat.messages.length === 1) {
+	onMount(() => {
+		const newChat = navigating.from?.route.id === '/chat/new';
+		if (newChat && chat.messages.length === 1) {
 			const lastMessage = chat.lastMessage;
 
 			if (lastMessage?.role === 'user') {

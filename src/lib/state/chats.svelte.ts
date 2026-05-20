@@ -1,9 +1,9 @@
-import type { Providers } from './providers.svelte';
-import { NameGenSettings } from './settings.svelte';
-import { CoState } from 'jazz-tools/svelte';
-import { ChatSchema } from './db.svelte';
-import { untrack } from 'svelte';
-import { dequal } from 'dequal';
+import { getNameGenSettings } from './settings.svelte';
+import { app, type ChatData } from '$lib/schema';
+import { toast } from '@ghostsui/svelte/toasts';
+import { getModel } from './providers.svelte';
+import type { LiveQuery } from './db.svelte';
+import type { Db } from 'jazz-tools';
 import {
 	convertToModelMessages,
 	type ModelMessage,
@@ -15,114 +15,94 @@ import {
 	streamText,
 } from 'ai';
 
-class State<M extends UIMessage> implements ChatState<M> {
-	messages: M[];
+export type Message = UIMessage<unknown>;
+
+class State implements ChatState<Message> {
 	status = $state<ChatStatus>('ready');
 	error = $state<Error | undefined>();
+	messages: Message[];
 
 	constructor(
-		private onChange: (messages: M[]) => void,
-		messages: M[] = [],
+		private readonly id: string,
+		private readonly db: Db,
+		query: LiveQuery<ChatData>,
 	) {
-		this.messages = $state(messages);
+		this.messages = query.current[0].messages;
 	}
 
-	setMessages = (messages: M[]) => {
+	private sync() {
+		this.db.update(app.chats, this.id, {
+			messages: $state.snapshot(this.messages) as Message[],
+		});
+	}
+
+	setMessages = (messages: Message[]) => {
 		this.messages = messages;
+		this.sync();
 	};
 
-	pushMessage = (message: M) => {
+	pushMessage = (message: Message) => {
 		this.messages.push(message);
-		// oxlint-disable-next-line typescript-eslint(no-explicit-any)
-		this.onChange($state.snapshot(this.messages as any));
+		this.sync();
 	};
 
 	popMessage = () => {
 		this.messages.pop();
-		// oxlint-disable-next-line typescript-eslint(no-explicit-any)
-		this.onChange($state.snapshot(this.messages as any));
+		this.sync();
 	};
 
-	replaceMessage = (index: number, message: M) => {
+	replaceMessage = (index: number, message: Message) => {
 		this.messages[index] = message;
-		// oxlint-disable-next-line typescript-eslint(no-explicit-any)
-		this.onChange($state.snapshot(this.messages as any));
+		this.sync();
 	};
 
 	snapshot = <T>(thing: T) => $state.snapshot(thing) as T;
 }
 
-export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
-	#state: CoState<typeof ChatSchema>;
-
-	set providerId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.$jazz.set('providerId', id);
-	}
-
+export class Chat extends AbstractChat<Message> {
 	get providerId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.providerId
-			: null;
+		return this.query.current[0].providerId;
 	}
 
-	set modelId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.$jazz.set('modelId', id);
+	set providerId(providerId: string | undefined) {
+		this.db.update(app.chats, this.id, { providerId });
 	}
 
 	get modelId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.modelId
-			: null;
+		return this.query.current[0].modelId;
 	}
 
-	get name(): string | null | undefined {
-		return this.#state.current.$isLoaded ? this.#state.current.name : null;
+	set modelId(modelId: string | null) {
+		this.db.update(app.chats, this.id, { modelId });
+	}
+
+	get name(): string | null {
+		return this.query.current[0].name;
 	}
 
 	set name(name: string | undefined) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
+		this.db.update(app.chats, this.id, { name });
+	}
 
-		// oxlint-disable-next-line eslint(no-undefined)
-		this.#state.current.$jazz.set('name', name || undefined);
+	get messages(): Message[] {
+		return this.state.messages;
 	}
 
 	get loading() {
-		return (
-			!this.#state.current.$isLoaded ||
-			this.#state.current.locked ||
-			this.status !== 'ready'
-		);
-	}
-
-	get messages(): M[] {
-		return this.#state.current.$isLoaded
-			? (this.#state.current.messages as unknown as M[])
-			: [];
+		return this.query.current[0].locked || this.status !== 'ready';
 	}
 
 	constructor(
 		public readonly id: string,
-		public readonly providers: Providers,
+		public readonly db: Db,
+		private readonly query: LiveQuery<ChatData>,
 	) {
 		super({
 			id,
-			state: new State<M>(onChange),
+			state: new State(id, db, query),
 			transport: {
 				sendMessages: async ({ messages, abortSignal }) => {
-					const model = this.providers.getModelOrThrow(
-						this.providerId,
-						this.modelId,
-					);
+					const model = await getModel(this.providerId, this.modelId);
 
 					const stream = streamText({
 						messages: await convertToModelMessages(messages),
@@ -138,104 +118,80 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 			},
 		});
 
-		const state = new CoState(ChatSchema, id);
-		this.#state = state;
-
-		this.#nameSettings = new NameGenSettings();
-
-		function onChange(messages: M[]) {
-			if (!state.current.$isLoaded) return;
-			// oxlint-disable-next-line typescript-eslint(no-explicit-any)
-			state.current.$jazz.set('messages', messages as any);
-		}
-
-		$effect(() => {
-			const locked = this.status !== 'ready';
-
-			untrack(() => {
-				if (
-					this.#state.current.$isLoaded &&
-					this.#state.current.locked !== locked
-				) {
-					this.#state.current.$jazz.set('locked', locked);
-				}
-			});
-		});
-
-		$effect(() => {
-			const { current } = this.#state;
-
-			if (current.$isLoaded) {
-				untrack(() => {
-					const db = $state.snapshot<unknown>(current.messages);
-					const local = $state.snapshot<unknown>(super.messages);
-					if (dequal(db, local)) return;
-					super.messages = db;
-				});
-			}
-		});
+		// this is broken and I don't feel like figuring it out rn
+		// $effect(() => {
+		// 	const locked = this.status !== 'ready';
+		// 	if (this.query.current[0].locked !== locked) {
+		// 		console.log('set locked', locked);
+		// 		this.db.update(app.chats, this.id, { locked });
+		// 	}
+		// });
 	}
 
-	generatingName = $state(false);
-	#nameSettings: NameGenSettings;
+	public generatingName = $state(false);
 
 	async generateName() {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('Chat is not loaded');
-		}
+		try {
+			const settings = await getNameGenSettings(this.db);
+			if (!settings.enabled) return;
 
-		const prompt = this.#nameSettings.prompt.trim();
+			if (!settings.prompt) {
+				throw new Error('No prompt provided');
+			}
 
-		if (!prompt) {
-			throw new Error('No prompt provided');
-		}
+			const model = await getModel(settings.providerId, settings.modelId);
 
-		const model = this.providers.getModelOrThrow(
-			this.#nameSettings.providerId,
-			this.#nameSettings.modelId,
-		);
+			if (this.generatingName) {
+				throw new Error('Name generation already in progress');
+			}
 
-		if (this.generatingName) {
-			throw new Error('Name generation already in progress');
-		}
+			this.generatingName = true;
 
-		this.generatingName = true;
+			const message = this.messages.find(
+				(message) =>
+					message.role === 'user' &&
+					message.parts.some((p) => p.type === 'text') &&
+					message.parts.length > 0,
+			);
 
-		const message = this.messages.find(
-			(message) =>
-				message.role === 'user' &&
-				message.parts.some((p) => p.type === 'text') &&
-				message.parts.length > 0,
-		);
+			if (!message) {
+				this.generatingName = false;
+				throw new Error('No user message found');
+			}
 
-		if (!message) {
-			this.generatingName = false;
-			throw new Error('No user message found');
-		}
-
-		const { text } = await generateText({
-			model,
-			maxOutputTokens: 32,
-			messages: [
-				{
-					role: 'system',
-					content: prompt,
+			const { text } = await generateText({
+				model,
+				providerOptions: {
+					openai: {
+						reasoningEffort: 'none',
+					},
 				},
-				...message.parts
-					.filter((part) => part.type === 'text')
-					.map(
-						(part): ModelMessage => ({
-							role: 'user',
-							content: part.text,
-						}),
-					),
-			],
-		});
+				messages: [
+					{
+						role: 'system',
+						content: settings.prompt,
+					},
+					...message.parts
+						.filter((part) => part.type === 'text')
+						.map(
+							(part): ModelMessage => ({
+								role: 'user',
+								content: part.text,
+							}),
+						),
+				],
+			});
 
-		if (this.#state.current.$isLoaded) {
-			this.#state.current.$jazz.set('name', text);
+			if (text) {
+				this.name = text;
+			} else {
+				throw new Error('No name generated');
+			}
+
+			this.generatingName = false;
+		} catch (error) {
+			const message = error instanceof Error ? error.message : `${error}`;
+			toast('error', `Failed to generate session name: ${message}`);
 		}
-
-		this.generatingName = false;
 	}
 }

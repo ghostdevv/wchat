@@ -1,109 +1,82 @@
-import { AccountCoState } from 'jazz-tools/svelte';
-import { AccountSchema } from './db.svelte';
+import type { Db } from 'jazz-tools';
+import { query } from './db.svelte';
+import {
+	type NameGenSettings,
+	type ChatSettings,
+	type KV,
+	app,
+} from '$lib/schema';
 
-export class NameGenSettings {
-	#state = new AccountCoState(AccountSchema, {
-		resolve: { root: { nameGenSettings: true } },
+function createProxy<T extends KV['value']>(
+	db: Db,
+	key: KV['key'],
+	object: T,
+	id?: string,
+) {
+	return new Proxy(object, {
+		set(target, tkey, value) {
+			if (!Reflect.has(target, tkey)) {
+				return false;
+			}
+
+			if (id) {
+				db.update(app.kv, id, {
+					value: { ...object, [tkey]: value },
+				});
+			} else {
+				db.insert(app.kv, {
+					key,
+					value: { ...object, [tkey]: value },
+				});
+			}
+
+			return true;
+		},
 	});
-
-	get loading() {
-		return !this.#state.current.$isLoaded;
-	}
-
-	get enabled(): boolean {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.enabled
-			: false;
-	}
-
-	set enabled(enabled: boolean) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('enabled', enabled);
-	}
-
-	set providerId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('providerId', id);
-	}
-
-	get providerId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.providerId
-			: null;
-	}
-
-	set modelId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('modelId', id);
-	}
-
-	get modelId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.modelId
-			: null;
-	}
-
-	get prompt(): string {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.nameGenSettings.prompt
-			: '';
-	}
-
-	set prompt(prompt: string) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.nameGenSettings.$jazz.set('prompt', prompt);
-	}
 }
 
-export class ChatSettings {
-	#state = new AccountCoState(AccountSchema, {
-		resolve: { root: { chatSettings: true } },
-	});
+export async function getNameGenSettings(db: Db): Promise<NameGenSettings> {
+	const raw = await db.one(app.kv.where({ key: 'settings::name-gen' }));
+	return raw
+		? (raw.value as NameGenSettings)
+		: { enabled: false, prompt: '', modelId: null, providerId: null };
+}
 
-	get loading() {
-		return !this.#state.current.$isLoaded;
-	}
+export async function getChatSettings(db: Db): Promise<ChatSettings> {
+	const raw = await db.one(app.kv.where({ key: 'settings::chat' }));
+	return raw
+		? (raw.value as ChatSettings)
+		: { defaultModelId: null, defaultProviderId: null };
+}
 
-	set defaultProviderId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
+export async function useSettings(db: Db) {
+	const name = await query(db, app.kv.where({ key: 'settings::name-gen' }));
+	const chat = await query(db, app.kv.where({ key: 'settings::chat' }));
 
-		this.#state.current.root.chatSettings.$jazz.set(
-			'defaultProviderId',
-			id,
-		);
-	}
-
-	get defaultProviderId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.chatSettings.defaultProviderId
-			: null;
-	}
-
-	set defaultModelId(id: string | null) {
-		if (!this.#state.current.$isLoaded) {
-			throw new Error('chat is not loaded');
-		}
-
-		this.#state.current.root.chatSettings.$jazz.set('defaultModelId', id);
-	}
-
-	get defaultModelId(): string | null {
-		return this.#state.current.$isLoaded
-			? this.#state.current.root.chatSettings.defaultModelId
-			: null;
-	}
+	return {
+		get nameGen() {
+			return createProxy<NameGenSettings>(
+				db,
+				'settings::name-gen',
+				(name.current.at(0)?.value as NameGenSettings) ?? {
+					enabled: false,
+					prompt: '',
+					modelId: null,
+					providerId: null,
+				},
+				name.current.at(0)?.id,
+			);
+		},
+		get chat() {
+			return createProxy<ChatSettings>(
+				db,
+				'settings::chat',
+				(chat.current.at(0)?.value as ChatSettings) ?? {
+					defaultModelId: null,
+					defaultProviderId: null,
+				},
+				chat.current.at(0)?.id,
+			);
+		},
+	};
 }

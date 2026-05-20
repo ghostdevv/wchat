@@ -7,31 +7,33 @@
 </script>
 
 <script lang="ts">
-	import { Providers, type Model } from '$lib/state/providers.svelte';
+	import { useProviders, type Model } from '$lib/state/providers.svelte';
 	import IconChevronDown from '~icons/lucide/chevron-down';
 	import IconCheck from '~icons/lucide/check';
+	import { sync } from './state/db.svelte';
 	import { Select } from 'melt/builders';
 
 	interface Props {
-		disabled: boolean;
+		disabled?: boolean;
 		modelId: string | null;
 		providerId: string | null;
 	}
 
 	let {
-		disabled,
+		disabled = false,
 		modelId = $bindable(),
 		providerId = $bindable(),
 	}: Props = $props();
 
-	const providers = new Providers();
+	const db = $derived(await sync.db());
+	const providers = $derived(await useProviders(db));
 
 	const options = $derived(
 		providers.current.flatMap((provider) =>
-			provider.current!.models.map(
+			provider.models?.map(
 				(model): Option => ({
 					providerId: provider.id,
-					providerName: provider.current!.name,
+					providerName: provider.name,
 					model,
 				}),
 			),

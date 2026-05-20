@@ -1,33 +1,22 @@
 <script lang="ts">
 	import IconMessageCirclePlus from '~icons/lucide/message-circle-plus';
-	import { AccountSchema } from '$lib/state/db.svelte';
-	import { AccountCoState } from 'jazz-tools/svelte';
+	import { query, sync } from '$lib/state/db.svelte';
 	import IconSettings from '~icons/lucide/settings';
 	import { resolve } from '$app/paths';
+	import { app } from '$lib/schema';
 
-	const account = new AccountCoState(AccountSchema, {
-		resolve: { root: { chats: { $each: true } } },
-	});
-
+	const db = $derived(await sync.db());
 	const chats = $derived(
-		account.current.$isLoaded
-			? account.current.root.chats
-					.toSorted(
-						(a, b) => b.$jazz.lastUpdatedAt - a.$jazz.lastUpdatedAt,
-					)
-					.map((chat) => ({
-						id: chat.$jazz.id,
-						name: chat.name?.trim() ?? chat.$jazz.id,
-					}))
-			: [],
+		await query(db, app.chats.orderBy('$updatedAt', 'desc')),
 	);
 </script>
 
 <nav class="sidebar">
 	<div class="chats">
-		{#each chats as chat (chat.id)}
-			<a href={resolve('/chat/[id]', { id: chat.id })} title={chat.name}>
-				{chat.name}
+		{#each chats.current as chat (chat.id)}
+			{@const name = chat.name?.trim() ?? chat.id}
+			<a href={resolve('/chat/[id]', { id: chat.id })} title={name}>
+				{name}
 			</a>
 		{/each}
 	</div>
