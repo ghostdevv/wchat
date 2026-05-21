@@ -30,7 +30,7 @@
 		"@replit/codemirror-lang-svelte": "^6.0.0",
 		"@rlly/pedantic": "^0.2.0",
 		"@sveltejs/adapter-node": "^5.5.4",
-		"@sveltejs/kit": "^2.54.0",
+		"@sveltejs/kit": "^2.60.1",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@valibot/to-json-schema": "^1.7.0",
 		"ai": "^6.0.182",
